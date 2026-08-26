@@ -1,0 +1,3703 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fuel Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+        body {
+            background: #f0f4fa;
+            padding: 24px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+        .dashboard {
+            max-width: 1600px;
+            width: 100%;
+        }
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 20px 28px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+            margin-bottom: 28px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            position: relative;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .header h1 {
+            font-weight: 600;
+            font-size: 1.7rem;
+            color: #0b2b4a;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header h1 i {
+            color: #2a7de1;
+        }
+        .nav-menu-wrapper {
+            position: relative;
+        }
+        .nav-menu-btn {
+            background: #f0f4fa;
+            border: 1.5px solid #dce3ec;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.82rem;
+            color: #1e3a5f;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .nav-menu-btn:hover {
+            border-color: #2a7de1;
+            background: #e8f0fa;
+        }
+        .nav-menu-btn i:last-child {
+            font-size: 0.7rem;
+            transition: transform 0.2s;
+        }
+        .nav-menu-btn.open i:last-child {
+            transform: rotate(180deg);
+        }
+        .nav-dropdown {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            border: 1px solid #eef2f8;
+            min-width: 200px;
+            overflow: hidden;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-6px);
+            transition: all 0.2s ease;
+        }
+        .nav-dropdown.show {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+        .nav-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 18px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.85rem;
+            color: #1e3a5f;
+            transition: background 0.15s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+        .nav-dropdown-item:hover {
+            background: #f5f8fc;
+        }
+        .nav-dropdown-item.active {
+            background: #e8f0fa;
+            color: #2a7de1;
+            font-weight: 600;
+        }
+        .nav-dropdown-item i {
+            width: 20px;
+            text-align: center;
+            color: #2a7de1;
+        }
+        .nav-dropdown-item .nav-desc {
+            font-size: 0.7rem;
+            color: #8a9bb5;
+            font-weight: 400;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .header .badge {
+            background: #e9eff8;
+            padding: 6px 18px;
+            border-radius: 40px;
+            color: #1e4b7a;
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .header .badge .cache-badge {
+            font-size: 0.7rem;
+            background: #d4e2f5;
+            padding: 2px 12px;
+            border-radius: 30px;
+            color: #1a4b7a;
+        }
+        .year-selector {
+            padding: 6px 16px 6px 14px;
+            border-radius: 40px;
+            border: 1.5px solid #dce3ec;
+            background: white;
+            font-weight: 500;
+            font-size: 0.85rem;
+            color: #1e3a5f;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s;
+            appearance: auto;
+        }
+        .year-selector:hover {
+            border-color: #2a7de1;
+        }
+        .year-selector:focus {
+            border-color: #2a7de1;
+            box-shadow: 0 0 0 3px rgba(42, 125, 225, 0.15);
+        }
+        .btn-refresh {
+            background: #2a7de1;
+            color: white;
+            border: none;
+            padding: 8px 22px;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s, transform 0.1s;
+            white-space: nowrap;
+        }
+        .btn-refresh:hover {
+            background: #1a5fb0;
+        }
+        .btn-refresh:active {
+            transform: scale(0.96);
+        }
+        .btn-refresh:disabled {
+            background: #a0b8d0;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-export {
+            background: #217346;
+            color: white;
+            border: none;
+            padding: 8px 22px;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s, transform 0.1s;
+            white-space: nowrap;
+        }
+        .btn-export:hover {
+            background: #185a32;
+        }
+        .btn-export:active {
+            transform: scale(0.96);
+        }
+        .btn-export:disabled {
+            background: #a0b8a8;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-reset {
+            background: #f0f4fa;
+            color: #4a5a6e;
+            border: 1.5px solid #dce3ec;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn-reset:hover {
+            border-color: #e6a817;
+            background: #fef9e7;
+            color: #8a6e3b;
+        }
+        .btn-reset:active {
+            transform: scale(0.96);
+        }
+        .toggle-group {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            background: #f0f4fa;
+            padding: 4px;
+            border-radius: 40px;
+        }
+        .toggle-btn {
+            border: none;
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #dce3ec;
+            color: #4a5a6e;
+            opacity: 0.6;
+        }
+        .toggle-btn.active-rm {
+            background: #1f5f9e;
+            color: white;
+            opacity: 1;
+            box-shadow: 0 2px 6px rgba(31, 95, 158, 0.3);
+        }
+        .toggle-btn.active-liter {
+            background: #1f8b6b;
+            color: white;
+            opacity: 1;
+            box-shadow: 0 2px 6px rgba(31, 139, 107, 0.3);
+        }
+        .toggle-btn:active {
+            transform: scale(0.94);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 18px;
+            padding: 16px 18px;
+            border: 1px solid #eef2f8;
+            transition: box-shadow 0.2s, border-color 0.2s;
+        }
+        .stat-card.clickable {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+        .stat-card.clickable:hover {
+            border-color: #2a7de1;
+            box-shadow: 0 4px 16px rgba(42, 125, 225, 0.12);
+        }
+        .stat-card.clickable::after {
+            content: "\f0d7";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            top: 10px;
+            right: 14px;
+            font-size: 0.7rem;
+            color: #8a9bb5;
+            opacity: 0.5;
+        }
+        .stat-card .label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: #6f7e94;
+            font-weight: 600;
+        }
+        .stat-card .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0b2b4a;
+            margin-top: 4px;
+        }
+        .stat-card .sub {
+            font-size: 0.72rem;
+            color: #3f5a78;
+            margin-top: 2px;
+        }
+        .charts-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+        .chart-panel {
+            background: white;
+            border-radius: 18px;
+            padding: 20px;
+            border: 1px solid #eef2f8;
+            flex: 1;
+            min-width: 0;
+        }
+        .chart-panel .panel-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #1e3a5f;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .chart-panel .panel-title i {
+            color: #2a7de1;
+        }
+        .chart-canvas-wrap {
+            position: relative;
+            width: 100%;
+            height: 300px;
+        }
+        .chart-canvas-wrap canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        .rank-toggle-group {
+            display: flex;
+            gap: 4px;
+            background: #f0f4fa;
+            padding: 3px;
+            border-radius: 30px;
+            margin-left: auto;
+            flex-wrap: wrap;
+        }
+        .rank-toggle-btn {
+            border: none;
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.68rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #dce3ec;
+            color: #4a5a6e;
+        }
+        .rank-toggle-btn.active-rm {
+            background: #1f5f9e;
+            color: white;
+        }
+        .rank-toggle-btn.active-liter {
+            background: #1f8b6b;
+            color: white;
+        }
+        .rank-toggle-btn.active-warn {
+            background: #e6a817;
+            color: white;
+        }
+        .rank-toggle-btn.active-danger {
+            background: #ef4444;
+            color: white;
+        }
+        .pie-toggle-group {
+            display: flex;
+            gap: 4px;
+            background: #f0f4fa;
+            padding: 3px;
+            border-radius: 30px;
+            margin-left: auto;
+        }
+        .pie-toggle-btn {
+            border: none;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.72rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #dce3ec;
+            color: #4a5a6e;
+        }
+        .pie-toggle-btn.active-rm {
+            background: #1f5f9e;
+            color: white;
+        }
+        .pie-toggle-btn.active-liter {
+            background: #1f8b6b;
+            color: white;
+        }
+        .rank-list {
+            list-style: none;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .rank-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .rank-list::-webkit-scrollbar-track {
+            background: #eef2f8;
+            border-radius: 3px;
+        }
+        .rank-list::-webkit-scrollbar-thumb {
+            background: #c0d0e0;
+            border-radius: 3px;
+        }
+        .rank-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            margin-bottom: 4px;
+            transition: background 0.15s;
+        }
+        .rank-item:hover {
+            background: #f5f8fc;
+        }
+        .rank-num {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #8a9bb5;
+            width: 24px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .rank-item:nth-child(1) .rank-num {
+            color: #e6a817;
+            font-size: 1rem;
+        }
+        .rank-item:nth-child(2) .rank-num {
+            color: #8a9bb5;
+            font-size: 0.95rem;
+        }
+        .rank-item:nth-child(3) .rank-num {
+            color: #b08a5c;
+            font-size: 0.9rem;
+        }
+        .rank-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .rank-name {
+            font-weight: 600;
+            font-size: 0.82rem;
+            color: #1e3a5f;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .rank-detail {
+            font-size: 0.7rem;
+            color: #6f7e94;
+        }
+        .rank-value {
+            font-weight: 700;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        .rank-value.rm-color {
+            color: #1f5f9e;
+        }
+        .rank-value.liter-color {
+            color: #1f8b6b;
+        }
+        .rank-value.warn-color {
+            color: #e6a817;
+        }
+        .rank-value.danger-color {
+            color: #ef4444;
+        }
+        .rank-empty {
+            text-align: center;
+            padding: 40px 16px;
+            color: #9aafc8;
+            font-size: 0.85rem;
+        }
+        .table-container {
+            background: white;
+            border-radius: 20px;
+            border: 1px solid #eef2f8;
+            overflow: hidden;
+            position: relative;
+        }
+        .table-scroll-wrapper {
+            overflow: auto;
+            max-height: 70vh;
+            position: relative;
+        }
+        .table-scroll-wrapper::-webkit-scrollbar {
+            width: 14px;
+            height: 14px;
+        }
+        .table-scroll-wrapper::-webkit-scrollbar-track {
+            background: #eef2f8;
+        }
+        .table-scroll-wrapper::-webkit-scrollbar-thumb {
+            background: #c0d0e0;
+            border-radius: 7px;
+        }
+        .table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #a0b8d0;
+        }
+        .sticky-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.82rem;
+            width: 100%;
+            min-width: max-content;
+            table-layout: auto;
+        }
+        .sticky-table .col-fixed {
+            position: sticky;
+            left: 0;
+            z-index: 1;
+            background: white;
+            min-width: 110px;
+            width: 110px;
+            box-shadow: 2px 0 0 0 #dce3ec;
+        }
+        .sticky-table .col-fixed:nth-child(1) {
+            left: 0;
+        }
+        .sticky-table thead .col-fixed {
+            z-index: 3;
+            background: #f8faff;
+        }
+        .sticky-table .filter-row .col-fixed {
+            z-index: 5;
+            background: #f8faff;
+        }
+        .sticky-table thead tr:not(.filter-row) .col-fixed {
+            z-index: 4;
+        }
+        .sticky-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #f8faff;
+            border-bottom: 2px solid #e2e9f2;
+        }
+        .sticky-table .filter-row td {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            padding: 8px 12px;
+            background: #f8faff;
+            border-bottom: 1px solid #eef2f8;
+        }
+        .sticky-table thead tr:not(.filter-row) th {
+            top: 48px;
+        }
+        .sticky-table th,
+        .sticky-table td {
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: top;
+            border-bottom: 1px solid #eef3f9;
+            min-width: 110px;
+        }
+        .sticky-table .col-month {
+            min-width: 180px;
+            width: 180px;
+        }
+        .vehicle-cell {
+            font-weight: 600;
+            color: #0b2b4a;
+        }
+        .category-item {
+            padding: 4px 8px;
+            margin: 2px 0;
+            background: #f8faff;
+            border-radius: 8px;
+            border: 1px solid #eef2f8;
+            font-size: 0.78rem;
+            line-height: 1.5;
+        }
+        .cat-name {
+            font-weight: 600;
+            color: #2c4b70;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .val-row {
+            display: flex;
+            gap: 12px;
+            font-size: 0.75rem;
+        }
+        .rm-value {
+            color: #1f5f9e;
+            font-weight: 600;
+        }
+        .liter-value {
+            color: #1f8b6b;
+            font-weight: 600;
+        }
+        .rm-value::before {
+            content: "RM ";
+            font-weight: 400;
+            color: #5f7c9e;
+        }
+        .liter-value::after {
+            content: " L";
+            font-weight: 400;
+            color: #5f7c9e;
+        }
+        .month-selector {
+            padding: 4px 12px;
+            border-radius: 30px;
+            border: 1.5px solid #dce3ec;
+            background: white;
+            font-weight: 500;
+            font-size: 0.78rem;
+            color: #1e3a5f;
+            cursor: pointer;
+            outline: none;
+            width: 130px;
+        }
+        .month-selector:hover {
+            border-color: #2a7de1;
+        }
+        .month-selector:focus {
+            border-color: #2a7de1;
+            box-shadow: 0 0 0 3px rgba(42, 125, 225, 0.15);
+        }
+        .filter-label {
+            font-weight: 600;
+            font-size: 0.78rem;
+            color: #1f3a5e;
+            margin-right: 8px;
+        }
+        .category-filter-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: 12px;
+            flex-wrap: wrap;
+        }
+        .category-filter-wrap .filter-label {
+            margin-right: 0;
+        }
+        .category-chips {
+            display: inline-flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .category-chip {
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1.5px solid #dce3ec;
+            background: white;
+            color: #4a5a6e;
+            transition: all 0.2s;
+            white-space: nowrap;
+            user-select: none;
+        }
+        .category-chip:hover {
+            border-color: #2a7de1;
+        }
+        .category-chip.active {
+            background: #2a7de1;
+            color: white;
+            border-color: #2a7de1;
+        }
+        .category-chip.all-chip {
+            background: #f0f4fa;
+            font-weight: 700;
+        }
+        .category-chip.all-chip.active {
+            background: #1e3a5f;
+            border-color: #1e3a5f;
+            color: white;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 48px 16px;
+            color: #5f7390;
+        }
+        .empty-state i {
+            font-size: 2.4rem;
+            color: #cbd8e8;
+            margin-bottom: 10px;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: #5f7390;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            padding: 0 6px;
+        }
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e3a5f;
+            color: white;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+            z-index: 999;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+        .sort-icon {
+            font-size: 0.65rem;
+            margin-left: 4px;
+            opacity: 0.4;
+            transition: opacity 0.2s;
+            cursor: pointer;
+        }
+        .sort-icon.active {
+            opacity: 1;
+            color: #2a7de1;
+        }
+        .sortable-th {
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s;
+        }
+        .sortable-th:hover {
+            background: #eef2fa !important;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.35);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .modal-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-dialog {
+            background: white;
+            border-radius: 18px;
+            width: 520px;
+            max-width: 92vw;
+            max-height: 75vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18);
+            transform: translateY(20px);
+            transition: transform 0.25s ease;
+        }
+        .modal-overlay.show .modal-dialog {
+            transform: translateY(0);
+        }
+        .modal-header {
+            padding: 18px 22px;
+            border-bottom: 1px solid #eef2f8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .modal-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1e3a5f;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-header h3 i {
+            color: #2a7de1;
+        }
+        .modal-close {
+            border: none;
+            background: #f0f4fa;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #5f7390;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close:hover {
+            background: #dce3ec;
+        }
+        .modal-search {
+            padding: 12px 22px;
+            border-bottom: 1px solid #eef2f8;
+        }
+        .modal-search input {
+            width: 100%;
+            padding: 9px 14px;
+            border-radius: 30px;
+            border: 1.5px solid #dce3ec;
+            font-size: 0.82rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .modal-search input:focus {
+            border-color: #2a7de1;
+            box-shadow: 0 0 0 3px rgba(42, 125, 225, 0.1);
+        }
+        .modal-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 22px 16px;
+        }
+        .modal-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal-list::-webkit-scrollbar-track {
+            background: #eef2f8;
+            border-radius: 3px;
+        }
+        .modal-list::-webkit-scrollbar-thumb {
+            background: #c0d0e0;
+            border-radius: 3px;
+        }
+        .modal-vehicle-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.15s;
+            margin-bottom: 2px;
+        }
+        .modal-vehicle-item:hover {
+            background: #f5f8fc;
+        }
+        .modal-vehicle-item.selected {
+            background: #e8f0fa;
+            border: 1.5px solid #2a7de1;
+        }
+        .modal-vehicle-item .check-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #c0d0e0;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 0.6rem;
+            color: transparent;
+        }
+        .modal-vehicle-item.selected .check-icon {
+            background: #2a7de1;
+            border-color: #2a7de1;
+            color: white;
+        }
+        .modal-vehicle-item .v-name {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #1e3a5f;
+            flex: 1;
+        }
+        .modal-vehicle-item .v-detail {
+            font-size: 0.72rem;
+            color: #8a9bb5;
+        }
+        .modal-footer {
+            padding: 14px 22px;
+            border-top: 1px solid #eef2f8;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .modal-btn {
+            padding: 8px 22px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .modal-btn-clear {
+            background: #f0f4fa;
+            color: #4a5a6e;
+        }
+        .modal-btn-clear:hover {
+            background: #dce3ec;
+        }
+        .modal-btn-confirm {
+            background: #2a7de1;
+            color: white;
+        }
+        .modal-btn-confirm:hover {
+            background: #1a5fb0;
+        }
+        @media (max-width: 1100px) {
+            .charts-row {
+                flex-wrap: wrap;
+            }
+            .chart-panel {
+                min-width: calc(50% - 10px);
+            }
+        }
+        @media (max-width: 700px) {
+            .header h1 {
+                font-size: 1.2rem;
+            }
+            .header-right {
+                width: 100%;
+                justify-content: flex-start;
+                gap: 8px;
+            }
+            .header-left {
+                flex-wrap: wrap;
+            }
+            .charts-row {
+                flex-direction: column;
+            }
+            .chart-panel {
+                min-width: 100%;
+            }
+            .sticky-table .col-fixed {
+                min-width: 80px;
+                width: 80px;
+            }
+            .sticky-table .col-fixed:nth-child(1) {
+                left: 0;
+            }
+            .sticky-table .col-month {
+                min-width: 160px;
+                width: 160px;
+            }
+            .sticky-table th,
+            .sticky-table td {
+                padding: 8px 8px;
+                font-size: 0.7rem;
+            }
+            .category-item {
+                font-size: 0.7rem;
+                padding: 3px 6px;
+            }
+            .sticky-table thead tr:not(.filter-row) th {
+                top: 44px;
+            }
+            .chart-canvas-wrap {
+                height: 220px;
+            }
+            .rank-list {
+                max-height: 220px;
+            }
+            .modal-dialog {
+                width: 95vw;
+            }
+        }
+        .table-mode-toggle {
+            display: inline-flex;
+            gap: 4px;
+            background: #f0f4fa;
+            padding: 3px;
+            border-radius: 30px;
+            margin-left: 8px;
+        }
+        .table-mode-btn {
+            border: none;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.68rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #dce3ec;
+            color: #4a5a6e;
+        }
+        .table-mode-btn.active {
+            background: #2a7de1;
+            color: white;
+        }
+        .summary-line-toggle {
+            display: flex;
+            gap: 4px;
+            background: #f0f4fa;
+            padding: 3px;
+            border-radius: 30px;
+            margin-left: auto;
+            flex-wrap: wrap;
+        }
+        .summary-line-btn {
+            border: none;
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.68rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #dce3ec;
+            color: #4a5a6e;
+            opacity: 0.5;
+        }
+        .summary-line-btn.active-expense {
+            background: #ef4444;
+            color: white;
+            opacity: 1;
+        }
+        .summary-line-btn.active-revenue {
+            background: #1f8b6b;
+            color: white;
+            opacity: 1;
+        }
+        .summary-line-btn.active-profit {
+            background: #e6a817;
+            color: white;
+            opacity: 1;
+        }
+        .summary-category-item {
+            padding: 4px 8px;
+            margin: 2px 0;
+            background: #f8faff;
+            border-radius: 8px;
+            border: 1px solid #eef2f8;
+            font-size: 0.75rem;
+            line-height: 1.4;
+        }
+        .summary-cat-name {
+            font-weight: 600;
+            color: #2c4b70;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .summary-val {
+            font-weight: 600;
+        }
+        .summary-val.expense {
+            color: #ef4444;
+        }
+        .summary-val.revenue {
+            color: #1f8b6b;
+        }
+        .summary-val.profit {
+            color: #e6a817;
+        }
+        .summary-val.expense::before {
+            content: "-RM ";
+            font-weight: 400;
+            color: #5f7c9e;
+        }
+        .summary-val.revenue::before {
+            content: "+RM ";
+            font-weight: 400;
+            color: #5f7c9e;
+        }
+        .summary-val.profit::before {
+            content: "RM ";
+            font-weight: 400;
+            color: #5f7c9e;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
+    </script>
+</head>
+<body>
+    <div class="dashboard" id="app">
+        <div class="header">
+            <div class="header-left">
+                <div class="nav-menu-wrapper">
+                    <button class="nav-menu-btn" id="navMenuBtn">
+                        <i class="fa-solid fa-bars"></i>
+                        <span id="navMenuLabel">Fuel Dashboard</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="nav-dropdown" id="navDropdown">
+                        <button class="nav-dropdown-item active" data-page="fuel">
+                            <i class="fa-solid fa-gas-pump"></i>
+                            <div>
+                                <div>Fuel Dashboard</div>
+                                <div class="nav-desc">油耗总览数据</div>
+                            </div>
+                        </button>
+                        <button class="nav-dropdown-item" data-page="summary">
+                            <i class="fa-solid fa-file-invoice-dollar"></i>
+                            <div>
+                                <div>Summary Report</div>
+                                <div class="nav-desc">收支总览数据</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+                <h1><i class="fa-solid fa-gas-pump"></i> <span id="pageTitle">Fuel Dashboard</span></h1>
+            </div>
+            <div class="header-right" id="fuelHeaderRight">
+                <div class="badge">
+                    <i class="fa-solid fa-database"></i>
+                    <span class="cache-badge"><i class="fa-solid fa-clock"></i> <span id="cacheStatus">检查中...</span></span>
+                </div>
+                <select class="year-selector" id="yearSelector">
+                    <option value="全部">全部年份</option>
+                </select>
+                <button class="btn-reset" id="resetBtn" title="一键复原所有筛选条件">
+                    <i class="fa-solid fa-undo"></i> 一键复原
+                </button>
+                <button class="btn-refresh" id="refreshBtn" title="从服务器获取最新数据">
+                    <i class="fa-solid fa-rotate-right"></i> 更新数据
+                </button>
+                <button class="btn-export" id="exportBtn" title="导出当前数据为Excel">
+                    <i class="fa-solid fa-file-excel"></i> 导出 Excel
+                </button>
+                <div class="toggle-group" id="toggleGroup">
+                    <button class="toggle-btn active-rm" data-type="rm">RM</button>
+                    <button class="toggle-btn active-liter" data-type="liter">Liter</button>
+                </div>
+            </div>
+            <div class="header-right" id="summaryHeaderRight" style="display:none;">
+                <div class="badge">
+                    <i class="fa-solid fa-database"></i>
+                    <span class="cache-badge"><i class="fa-solid fa-clock"></i> <span id="summaryCacheStatus">检查中...</span></span>
+                </div>
+                <select class="year-selector" id="summaryYearSelector">
+                    <option value="全部">全部年份</option>
+                </select>
+                <button class="btn-reset" id="summaryResetBtn" title="一键复原所有筛选条件">
+                    <i class="fa-solid fa-undo"></i> 一键复原
+                </button>
+                <button class="btn-export" id="summaryExportBtn" title="导出当前数据为Excel">
+                    <i class="fa-solid fa-file-excel"></i> 导出 Excel
+                </button>
+            </div>
+        </div>
+        <div id="fuelPage">
+            <div class="stats-grid">
+                <div class="stat-card clickable" id="statCardVehicles" title="点击选择车牌">
+                    <div class="label">车辆总数</div>
+                    <div class="value" id="statVehicles">0</div>
+                    <div class="sub" id="statVehiclesSub"></div>
+                </div>
+                <div class="stat-card clickable" id="statCardTypes" title="点击选择车型">
+                    <div class="label">车型</div>
+                    <div class="value" id="statTypes">0</div>
+                    <div class="sub" id="statTypesSub"></div>
+                </div>
+                <div class="stat-card clickable" id="statCardFuels" title="点击选择燃油种类">
+                    <div class="label">燃油种类</div>
+                    <div class="value" id="statFuels">0</div>
+                    <div class="sub" id="statFuelsSub"></div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">总 RM</div>
+                    <div class="value" id="statTotalRM">0</div>
+                    <div class="sub">所有月份</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">总 Liter</div>
+                    <div class="value" id="statTotalLiter">0</div>
+                    <div class="sub">所有月份</div>
+                </div>
+            </div>
+            <div class="charts-row" id="chartsRow">
+                <div class="chart-panel" id="chartPanel">
+                    <div class="panel-title"><i class="fa-solid fa-chart-line"></i> 年度趋势曲线</div>
+                    <div class="chart-canvas-wrap"><canvas id="trendChart"></canvas></div>
+                </div>
+                <div class="chart-panel" id="rankPanel">
+                    <div class="panel-title">
+                        <i class="fa-solid fa-trophy"></i> 排行榜 TOP 20
+                        <div class="rank-toggle-group" id="rankToggleGroup">
+                            <button class="rank-toggle-btn active-rm" data-rtype="rm">RM</button>
+                            <button class="rank-toggle-btn active-liter" data-rtype="liter">Liter</button>
+                        </div>
+                    </div>
+                    <ul class="rank-list" id="rankList"></ul>
+                </div>
+                <div class="chart-panel" id="piePanel">
+                    <div class="panel-title">
+                        <i class="fa-solid fa-chart-pie"></i> 油耗分类占比
+                        <div class="pie-toggle-group" id="pieToggleGroup">
+                            <button class="pie-toggle-btn active-rm" data-ptype="rm">RM</button>
+                            <button class="pie-toggle-btn active-liter" data-ptype="liter">Liter</button>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrap"><canvas id="pieChart"></canvas></div>
+                </div>
+            </div>
+            <div class="table-container">
+                <div class="table-scroll-wrapper" id="tableScroll">
+                    <table class="sticky-table" id="mainTable">
+                        <thead id="tableHead"></thead>
+                        <tbody id="tableBody">
+                            <tr><td colspan="10" class="empty-state"><i class="fa-solid fa-spinner fa-pulse"></i> 加载数据中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="footer">
+                <span><i class="fa-regular fa-clock"></i> 数据基于 RM / Liter 工作表合并</span>
+            </div>
+        </div>
+        <div id="summaryPage" style="display:none;">
+            <div class="stats-grid">
+                <div class="stat-card clickable" id="summaryStatCardVehicles" title="点击选择车牌">
+                    <div class="label">车辆总数</div>
+                    <div class="value" id="summaryStatVehicles">0</div>
+                    <div class="sub" id="summaryStatVehiclesSub"></div>
+                </div>
+                <div class="stat-card clickable" id="summaryStatCardExpense" title="点击筛选费用分类">
+                    <div class="label">总支出</div>
+                    <div class="value" id="summaryStatExpense">0</div>
+                    <div class="sub" id="summaryStatExpenseSub">所有费用</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">总收入</div>
+                    <div class="value" id="summaryStatRevenue">0</div>
+                    <div class="sub">Revenue</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Profit & Loss</div>
+                    <div class="value" id="summaryStatProfit">0</div>
+                    <div class="sub">Profit</div>
+                </div>
+            </div>
+            <div class="charts-row">
+                <div class="chart-panel">
+                    <div class="panel-title">
+                        <i class="fa-solid fa-chart-line"></i> 趋势曲线
+                        <div class="summary-line-toggle" id="summaryLineToggle">
+                            <button class="summary-line-btn active-expense" data-line="expense">费用</button>
+                            <button class="summary-line-btn active-revenue" data-line="revenue">收入</button>
+                            <button class="summary-line-btn active-profit" data-line="profit">损益</button>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrap"><canvas id="summaryTrendChart"></canvas></div>
+                </div>
+                <div class="chart-panel">
+                    <div class="panel-title">
+                        <i class="fa-solid fa-trophy"></i> 排行榜 TOP 20
+                        <div class="rank-toggle-group" id="summaryRankToggleGroup">
+                            <button class="rank-toggle-btn active-expense" data-srtype="expense_high">费用最高</button>
+                            <button class="rank-toggle-btn active-expense" data-srtype="expense_low">费用最低</button>
+                            <button class="rank-toggle-btn active-expense" data-srtype="revenue_high">收入最高</button>
+                            <button class="rank-toggle-btn active-expense" data-srtype="revenue_low">收入最低</button>
+                            <button class="rank-toggle-btn active-expense" data-srtype="profit_high">损益最高</button>
+                            <button class="rank-toggle-btn active-expense" data-srtype="profit_low">损益最低</button>
+                        </div>
+                    </div>
+                    <ul class="rank-list" id="summaryRankList"></ul>
+                </div>
+                <div class="chart-panel">
+                    <div class="panel-title">
+                        <i class="fa-solid fa-chart-pie"></i> 费用种类占比
+                    </div>
+                    <div class="chart-canvas-wrap"><canvas id="summaryPieChart"></canvas></div>
+                </div>
+            </div>
+            <div class="table-container">
+                <div class="table-scroll-wrapper">
+                    <table class="sticky-table" id="summaryTable">
+                        <thead id="summaryTableHead"></thead>
+                        <tbody id="summaryTableBody">
+                            <tr><td colspan="10" class="empty-state"><i class="fa-solid fa-spinner fa-pulse"></i> 加载数据中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="footer">
+                <span><i class="fa-regular fa-clock"></i> 数据基于收支总览工作表</span>
+            </div>
+        </div>
+        <div class="toast" id="toast"><i class="fa-solid fa-check-circle"></i> <span id="toastMsg">已更新</span></div>
+        <div class="modal-overlay" id="vehicleModalOverlay">
+            <div class="modal-dialog">
+                <div class="modal-header">
+                    <h3><i class="fa-solid fa-car"></i> 选择车牌（可多选）</h3>
+                    <button class="modal-close" id="modalCloseVehicle"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="modal-search">
+                    <input type="text" id="modalSearchVehicle" placeholder="搜索车牌...">
+                </div>
+                <div class="modal-list" id="modalVehicleList"></div>
+                <div class="modal-footer">
+                    <button class="modal-btn modal-btn-clear" id="modalClearVehicle">显示全部</button>
+                    <button class="modal-btn modal-btn-confirm" id="modalConfirmVehicle">确认</button>
+                </div>
+            </div>
+        </div>
+        <div class="modal-overlay" id="typeModalOverlay">
+            <div class="modal-dialog">
+                <div class="modal-header">
+                    <h3><i class="fa-solid fa-shapes"></i> 选择车型（可多选）</h3>
+                    <button class="modal-close" id="modalCloseType"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="modal-search">
+                    <input type="text" id="modalSearchType" placeholder="搜索车型...">
+                </div>
+                <div class="modal-list" id="modalTypeList"></div>
+                <div class="modal-footer">
+                    <button class="modal-btn modal-btn-clear" id="modalClearType">显示全部</button>
+                    <button class="modal-btn modal-btn-confirm" id="modalConfirmType">确认</button>
+                </div>
+            </div>
+        </div>
+        <div class="modal-overlay" id="fuelModalOverlay">
+            <div class="modal-dialog">
+                <div class="modal-header">
+                    <h3><i class="fa-solid fa-gas-pump"></i> 选择燃油种类（可多选）</h3>
+                    <button class="modal-close" id="modalCloseFuel"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="modal-search">
+                    <input type="text" id="modalSearchFuel" placeholder="搜索燃油种类...">
+                </div>
+                <div class="modal-list" id="modalFuelList"></div>
+                <div class="modal-footer">
+                    <button class="modal-btn modal-btn-clear" id="modalClearFuel">显示全部</button>
+                    <button class="modal-btn modal-btn-confirm" id="modalConfirmFuel">确认</button>
+                </div>
+            </div>
+        </div>
+        <div class="modal-overlay" id="summaryVehicleModalOverlay">
+            <div class="modal-dialog">
+                <div class="modal-header">
+                    <h3><i class="fa-solid fa-car"></i> 选择车牌（可多选）</h3>
+                    <button class="modal-close" id="summaryModalCloseVehicle"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="modal-search">
+                    <input type="text" id="summaryModalSearchVehicle" placeholder="搜索车牌...">
+                </div>
+                <div class="modal-list" id="summaryModalVehicleList"></div>
+                <div class="modal-footer">
+                    <button class="modal-btn modal-btn-clear" id="summaryModalClearVehicle">显示全部</button>
+                    <button class="modal-btn modal-btn-confirm" id="summaryModalConfirmVehicle">确认</button>
+                </div>
+            </div>
+        </div>
+        <div class="modal-overlay" id="summaryTypeModalOverlay">
+            <div class="modal-dialog">
+                <div class="modal-header">
+                    <h3><i class="fa-solid fa-shapes"></i> 选择车型（可多选）</h3>
+                    <button class="modal-close" id="summaryModalCloseType"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="modal-search">
+                    <input type="text" id="summaryModalSearchType" placeholder="搜索车型...">
+                </div>
+                <div class="modal-list" id="summaryModalTypeList"></div>
+                <div class="modal-footer">
+                    <button class="modal-btn modal-btn-clear" id="summaryModalClearType">显示全部</button>
+                    <button class="modal-btn modal-btn-confirm" id="summaryModalConfirmType">确认</button>
+                </div>
+            </div>
+        </div>
+        <div class="modal-overlay" id="summaryFuelModalOverlay">
+            <div class="modal-dialog">
+                <div class="modal-header">
+                    <h3><i class="fa-solid fa-gas-pump"></i> 选择燃油种类（可多选）</h3>
+                    <button class="modal-close" id="summaryModalCloseFuel"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="modal-search">
+                    <input type="text" id="summaryModalSearchFuel" placeholder="搜索燃油种类...">
+                </div>
+                <div class="modal-list" id="summaryModalFuelList"></div>
+                <div class="modal-footer">
+                    <button class="modal-btn modal-btn-clear" id="summaryModalClearFuel">显示全部</button>
+                    <button class="modal-btn modal-btn-confirm" id="summaryModalConfirmFuel">确认</button>
+                </div>
+            </div>
+        </div>
+        <div class="modal-overlay" id="summaryExpenseModalOverlay">
+            <div class="modal-dialog">
+                <div class="modal-header">
+                    <h3><i class="fa-solid fa-list"></i> 选择费用分类（可多选）</h3>
+                    <button class="modal-close" id="summaryModalCloseExpense"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="modal-list" id="summaryModalExpenseList"></div>
+                <div class="modal-footer">
+                    <button class="modal-btn modal-btn-clear" id="summaryModalClearExpense">显示全部</button>
+                    <button class="modal-btn modal-btn-confirm" id="summaryModalConfirmExpense">确认</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function() {
+            const API_URL = 'https://script.google.com/macros/s/AKfycbwM1dZHCQ5OrH9JKQmhN65P_WYGsp0InJgRYP7kMZXWsbAJcngRQwr8z__QQUkumiJI/exec';
+            const CATEGORIES = ['Shell', 'Petronas', 'Cash', 'Delta Swasta', 'Bescare SDN BHD', 'Tangki'];
+            const SUMMARY_CATEGORIES = ['Fuel Expense', 'Maintenance', 'Lubricant', 'Tyres', 'Charges', 'Others', 'Saman',
+                'Insurance', 'Revenue', 'Profit'
+            ];
+            const EXPENSE_CATEGORIES = ['Fuel Expense', 'Maintenance', 'Lubricant', 'Tyres', 'Charges', 'Others', 'Saman',
+                'Insurance'
+            ];
+            const PIE_COLORS = ['#1f5f9e', '#1f8b6b', '#e6a817', '#8b5cf6', '#ef4444', '#06b6d4'];
+            const SUMMARY_PIE_COLORS = ['#ef4444', '#f97316', '#e6a817', '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16', '#6366f1'];
+            const EXCLUDED_MONTH_PREFIXES = ['TOTAL', 'AVERAGE'];
+            const CACHE_TTL = 3 * 24 * 60 * 60 * 1000;
+            const CACHE_KEY = 'fuel_dashboard_data';
+            const CACHE_TIME_KEY = 'fuel_dashboard_timestamp';
+            let showRM = true,
+                showLiter = true;
+            let selectedYear = '全部',
+                selectedMonth = '全部';
+            let selectedVehicles = [];
+            let selectedTypes = [];
+            let selectedFuels = [];
+            let selectedCategories = [...CATEGORIES];
+            let cachedData = null,
+                isRefreshing = false,
+                yearOptionsBuilt = false;
+            let rankType = 'rm';
+            let pieType = 'rm';
+            let trendChart = null;
+            let pieChart = null;
+            let sortState = { column: null, direction: 0 };
+            let vehicleModalVisible = false,
+                typeModalVisible = false,
+                fuelModalVisible = false;
+            let vehicleSearchTerm = '',
+                typeSearchTerm = '',
+                fuelSearchTerm = '';
+            let tempSelectedVehicles = [];
+            let tempSelectedTypes = [];
+            let tempSelectedFuels = [];
+            let currentPage = 'fuel';
+            let summaryData = null;
+            let summaryYear = '全部',
+                summaryMonth = '全部';
+            let summaryVehicles = [];
+            let summaryTypes = [];
+            let summaryFuels = [];
+            let summaryCategories = [...SUMMARY_CATEGORIES];
+            let summaryLineShow = { expense: true, revenue: true, profit: true };
+            let summaryRankType = 'expense_high';
+            let summaryTableMode = 'summary';
+            let summaryTrendChart = null;
+            let summaryPieChart = null;
+            let summaryYearOptionsBuilt = false;
+            let summaryVehicleModalVisible = false,
+                summaryTypeModalVisible = false,
+                summaryFuelModalVisible = false,
+                summaryExpenseModalVisible = false;
+            let summaryVehicleSearchTerm = '',
+                summaryTypeSearchTerm = '',
+                summaryFuelSearchTerm = '';
+            let tempSummaryVehicles = [];
+            let tempSummaryTypes = [];
+            let tempSummaryFuels = [];
+            let tempSummaryCategories = [...SUMMARY_CATEGORIES];
+            const $ = id => document.getElementById(id);
+            const statVehicles = $('statVehicles'),
+                statTypes = $('statTypes'),
+                statFuels = $('statFuels');
+            const statTotalRM = $('statTotalRM'),
+                statTotalLiter = $('statTotalLiter');
+            const statVehiclesSub = $('statVehiclesSub'),
+                statTypesSub = $('statTypesSub'),
+                statFuelsSub = $('statFuelsSub');
+            const statCardVehicles = $('statCardVehicles'),
+                statCardTypes = $('statCardTypes'),
+                statCardFuels = $('statCardFuels');
+            const tableHead = $('tableHead'),
+                tableBody = $('tableBody');
+            const cacheStatus = $('cacheStatus'),
+                refreshBtn = $('refreshBtn');
+            const toast = $('toast'),
+                toastMsg = $('toastMsg');
+            const toggleGroup = $('toggleGroup'),
+                yearSelector = $('yearSelector');
+            const rankToggleGroup = $('rankToggleGroup');
+            const pieToggleGroup = $('pieToggleGroup');
+            const rankList = $('rankList');
+            const vehicleModalOverlay = $('vehicleModalOverlay');
+            const modalVehicleList = $('modalVehicleList');
+            const modalSearchVehicle = $('modalSearchVehicle');
+            const modalCloseVehicle = $('modalCloseVehicle');
+            const modalClearVehicle = $('modalClearVehicle');
+            const modalConfirmVehicle = $('modalConfirmVehicle');
+            const typeModalOverlay = $('typeModalOverlay');
+            const modalTypeList = $('modalTypeList');
+            const modalSearchType = $('modalSearchType');
+            const modalCloseType = $('modalCloseType');
+            const modalClearType = $('modalClearType');
+            const modalConfirmType = $('modalConfirmType');
+            const fuelModalOverlay = $('fuelModalOverlay');
+            const modalFuelList = $('modalFuelList');
+            const modalSearchFuel = $('modalSearchFuel');
+            const modalCloseFuel = $('modalCloseFuel');
+            const modalClearFuel = $('modalClearFuel');
+            const modalConfirmFuel = $('modalConfirmFuel');
+            const exportBtn = $('exportBtn');
+            const navMenuBtn = $('navMenuBtn');
+            const navDropdown = $('navDropdown');
+            const navMenuLabel = $('navMenuLabel');
+            const pageTitle = $('pageTitle');
+            const fuelPage = $('fuelPage');
+            const summaryPage = $('summaryPage');
+            const fuelHeaderRight = $('fuelHeaderRight');
+            const resetBtn = $('resetBtn');
+            const summaryHeaderRight = $('summaryHeaderRight');
+            const summaryStatVehicles = $('summaryStatVehicles'),
+                summaryStatExpense = $('summaryStatExpense'),
+                summaryStatRevenue = $('summaryStatRevenue'),
+                summaryStatProfit = $('summaryStatProfit');
+            const summaryStatVehiclesSub = $('summaryStatVehiclesSub');
+            const summaryStatExpenseSub = $('summaryStatExpenseSub');
+            const summaryStatCardVehicles = $('summaryStatCardVehicles');
+            const summaryStatCardExpense = $('summaryStatCardExpense');
+            const summaryYearSelector = $('summaryYearSelector');
+            const summaryResetBtn = $('summaryResetBtn');
+            const summaryExportBtn = $('summaryExportBtn');
+            const summaryLineToggle = $('summaryLineToggle');
+            const summaryRankToggleGroup = $('summaryRankToggleGroup');
+            const summaryRankList = $('summaryRankList');
+            const summaryTableHead = $('summaryTableHead');
+            const summaryTableBody = $('summaryTableBody');
+            const summaryVehicleModalOverlay = $('summaryVehicleModalOverlay');
+            const summaryModalVehicleList = $('summaryModalVehicleList');
+            const summaryModalSearchVehicle = $('summaryModalSearchVehicle');
+            const summaryModalCloseVehicle = $('summaryModalCloseVehicle');
+            const summaryModalClearVehicle = $('summaryModalClearVehicle');
+            const summaryModalConfirmVehicle = $('summaryModalConfirmVehicle');
+            const summaryTypeModalOverlay = $('summaryTypeModalOverlay');
+            const summaryModalTypeList = $('summaryModalTypeList');
+            const summaryModalSearchType = $('summaryModalSearchType');
+            const summaryModalCloseType = $('summaryModalCloseType');
+            const summaryModalClearType = $('summaryModalClearType');
+            const summaryModalConfirmType = $('summaryModalConfirmType');
+            const summaryFuelModalOverlay = $('summaryFuelModalOverlay');
+            const summaryModalFuelList = $('summaryModalFuelList');
+            const summaryModalSearchFuel = $('summaryModalSearchFuel');
+            const summaryModalCloseFuel = $('summaryModalCloseFuel');
+            const summaryModalClearFuel = $('summaryModalClearFuel');
+            const summaryModalConfirmFuel = $('summaryModalConfirmFuel');
+            const summaryExpenseModalOverlay = $('summaryExpenseModalOverlay');
+            const summaryModalExpenseList = $('summaryModalExpenseList');
+            const summaryModalCloseExpense = $('summaryModalCloseExpense');
+            const summaryModalClearExpense = $('summaryModalClearExpense');
+            const summaryModalConfirmExpense = $('summaryModalConfirmExpense');
+
+            function fmt(num) {
+                const n = Number(num);
+                return Number.isFinite(n) ? n.toFixed(2) : '0.00';
+            }
+
+            function fmtComma(num) {
+                const parts = fmt(num).split('.');
+                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                return parts.join('.');
+            }
+
+            function getCache() {
+                try {
+                    const raw = localStorage.getItem(CACHE_KEY);
+                    const time = localStorage.getItem(CACHE_TIME_KEY);
+                    return raw && time ? { data: JSON.parse(raw), timestamp: +time } : null;
+                } catch { return null; }
+            }
+
+            function setCache(data) {
+                try { localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+                    localStorage.setItem(CACHE_TIME_KEY, String(Date.now())); } catch {}
+            }
+
+            function isCacheValid(cache) { return cache && Date.now() - cache.timestamp < CACHE_TTL; }
+
+            function formatCacheTime(ts) { return new Date(ts).toLocaleString('zh-CN', { hour12: false }); }
+
+            function showToast(msg, icon = 'fa-check-circle') {
+                toastMsg.textContent = msg;
+                toast.querySelector('i').className = `fa-solid ${icon}`;
+                toast.classList.add('show');
+                clearTimeout(toast._t);
+                toast._t = setTimeout(() => toast.classList.remove('show'), 3000);
+            }
+
+            function updateCacheBadge(status, ts) { cacheStatus.textContent = ts ? `${status} · ${formatCacheTime(ts)}` :
+                    status; }
+
+            function setLoading(loading) {
+                if (loading) { refreshBtn.disabled = true;
+                    refreshBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 更新中...'; } else { refreshBtn
+                        .disabled = false;
+                    refreshBtn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> 更新数据'; }
+            }
+
+            function isExcludedMonth(name) { return EXCLUDED_MONTH_PREFIXES.some(p => name.startsWith(p)); }
+
+            function extractYear(str) {
+                if (!str) return '';
+                if (str.includes('-')) { const last = str.split('-').pop(); return /^\d{2}$/.test(last) ? '20' + last :
+                    last; }
+                const m4 = str.match(/\d{4}/);
+                if (m4) return m4[0];
+                const m2 = str.match(/\d{2}/);
+                if (m2) return '20' + m2[0];
+                return str;
+            }
+
+            function extractMonthAbbr(str) { return str.includes('-') ? str.split('-')[0] : str; }
+
+            function monthSortKey(abbr) {
+                const order = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const idx = order.indexOf(abbr);
+                return idx >= 0 ? idx : 99;
+            }
+
+            function fetchFromAPI() {
+                return fetch(API_URL).then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res
+                .json(); });
+            }
+
+            function fetchData(force = false) {
+                const cache = getCache();
+                if (force) {
+                    updateCacheBadge('更新中...');
+                    return fetchFromAPI().then(d => { setCache(d);
+                            updateCacheBadge('已缓存', Date.now());
+                            showToast('数据已更新'); return d; })
+                        .catch(err => {
+                            if (cache) { updateCacheBadge('过期缓存', cache.timestamp);
+                                showToast('网络异常，使用缓存数据', 'fa-triangle-exclamation'); return cache
+                                .data; }
+                            throw err;
+                        });
+                }
+                if (cache && isCacheValid(cache)) { updateCacheBadge('缓存', cache.timestamp); return Promise.resolve(cache
+                        .data); }
+                updateCacheBadge('更新中...');
+                return fetchFromAPI().then(d => { setCache(d);
+                        updateCacheBadge('已缓存', Date.now()); return d; })
+                    .catch(err => { if (cache) { updateCacheBadge('过期缓存', cache.timestamp);
+                            showToast('网络异常，使用缓存数据', 'fa-triangle-exclamation'); return cache.data; } throw err; });
+            }
+
+            function getFixedColValue(vehicle, col) {
+                const map = { vehicle: 'vehicle', brand: 'brand', type: 'type', fuel: 'fuel' };
+                const key = map[col];
+                return (vehicle[key] || '').toString().toLowerCase();
+            }
+
+            function getTypeCombo(vehicle) {
+                const brand = vehicle.brand || '-';
+                const type = vehicle.type || '-';
+                return brand + ' - ' + type;
+            }
+
+            function getFuelList(vehicles) {
+                return [...new Set(vehicles.map(v => v.fuel || '-'))].sort();
+            }
+
+            function getFilteredVehicles(allVehicles) {
+                let result = [...allVehicles];
+                if (selectedVehicles.length > 0) {
+                    result = result.filter(v => selectedVehicles.includes(v.vehicle));
+                }
+                if (selectedTypes.length > 0) {
+                    result = result.filter(v => selectedTypes.includes(getTypeCombo(v)));
+                }
+                if (selectedFuels.length > 0) {
+                    result = result.filter(v => selectedFuels.includes(v.fuel || '-'));
+                }
+                return result;
+            }
+
+            function sortVehicles(vehicles) {
+                if (sortState.direction === 0 || !sortState.column) return [...vehicles];
+                const col = sortState.column;
+                const dir = sortState.direction;
+                const sorted = [...vehicles];
+                sorted.sort((a, b) => {
+                    const valA = getFixedColValue(a, col);
+                    const valB = getFixedColValue(b, col);
+                    if (valA < valB) return -1 * dir;
+                    if (valA > valB) return 1 * dir;
+                    return 0;
+                });
+                return sorted;
+            }
+
+            function getSortIcon(colKey) {
+                if (sortState.column !== colKey || sortState.direction === 0) {
+                    return '<i class="fa-solid fa-sort sort-icon"></i>';
+                }
+                const icon = sortState.direction === 1 ? 'fa-sort-up' : 'fa-sort-down';
+                return `<i class="fa-solid ${icon} sort-icon active"></i>`;
+            }
+
+            function handleSortClick(colKey) {
+                if (sortState.column === colKey) {
+                    if (sortState.direction === 1) sortState.direction = -1;
+                    else if (sortState.direction === -1) { sortState.direction = 0;
+                        sortState.column = null; } else sortState.direction = 1;
+                } else {
+                    sortState.column = colKey;
+                    sortState.direction = 1;
+                }
+                cachedData && render(cachedData);
+            }
+
+            function getChartMonths(allRegularMonths) {
+                const now = new Date();
+                const thisYear = String(now.getFullYear());
+                const thisMonthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][
+                    now.getMonth()
+                ];
+                if (selectedYear === '全部' || selectedYear === thisYear) {
+                    const sorted = [...allRegularMonths].sort((a, b) => {
+                        const ya = extractYear(a),
+                            yb = extractYear(b);
+                        if (ya !== yb) return ya.localeCompare(yb);
+                        return monthSortKey(extractMonthAbbr(a)) - monthSortKey(extractMonthAbbr(b));
+                    });
+                    const thisMonthStr = thisMonthAbbr + '-' + thisYear.slice(2);
+                    let endIdx = sorted.findIndex(m => m === thisMonthStr);
+                    if (endIdx < 0) {
+                        for (let i = sorted.length - 1; i >= 0; i--) {
+                            const y = extractYear(sorted[i]);
+                            const mAbbr = extractMonthAbbr(sorted[i]);
+                            if (y < thisYear || (y === thisYear && monthSortKey(mAbbr) <= monthSortKey(thisMonthAbbr))) {
+                                endIdx = i;
+                                break;
+                            }
+                        }
+                    }
+                    if (endIdx < 0) endIdx = sorted.length - 1;
+                    const startIdx = Math.max(0, endIdx - 11);
+                    return sorted.slice(startIdx, endIdx + 1);
+                } else {
+                    const yearMonths = allRegularMonths.filter(m => extractYear(m) === selectedYear);
+                    return yearMonths.sort((a, b) => monthSortKey(extractMonthAbbr(a)) - monthSortKey(extractMonthAbbr(b)));
+                }
+            }
+
+            function updateTrendChart(allRegularMonths, vehicles) {
+                const chartMonths = getChartMonths(allRegularMonths);
+                const labels = chartMonths;
+                const rmData = [];
+                const literData = [];
+                const calcCats = selectedCategories;
+                chartMonths.forEach(m => {
+                    let rmSum = 0,
+                        literSum = 0;
+                    vehicles.forEach(v => {
+                        const md = v.months[m];
+                        if (!md) return;
+                        calcCats.forEach(cat => {
+                            const p = md[cat];
+                            if (p) { rmSum += p.rm || 0;
+                                literSum += p.liter || 0; }
+                        });
+                    });
+                    rmData.push(parseFloat(rmSum.toFixed(2)));
+                    literData.push(parseFloat(literSum.toFixed(2)));
+                });
+                const ctx = document.getElementById('trendChart');
+                if (!ctx) return;
+                if (trendChart) trendChart.destroy();
+                trendChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'RM',
+                            data: rmData,
+                            borderColor: '#1f5f9e',
+                            backgroundColor: 'rgba(31,95,158,0.08)',
+                            borderWidth: 2.5,
+                            tension: 0.35,
+                            fill: true,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#1f5f9e',
+                            yAxisID: 'y'
+                        }, {
+                            label: 'Liter',
+                            data: literData,
+                            borderColor: '#1f8b6b',
+                            backgroundColor: 'rgba(31,139,107,0.06)',
+                            borderWidth: 2.5,
+                            tension: 0.35,
+                            fill: true,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#1f8b6b',
+                            yAxisID: 'y1'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 24,
+                                    boxWidth: 10 } },
+                            tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label +
+                                        ': ' + ctx.parsed.y.toFixed(2); } } }
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                position: 'left',
+                                title: { display: true, text: 'RM', color: '#1f5f9e' },
+                                ticks: { callback: v => v.toFixed(0), color: '#1f5f9e' },
+                                grid: { color: '#eef3f9' }
+                            },
+                            y1: {
+                                type: 'linear',
+                                position: 'right',
+                                title: { display: true, text: 'Liter', color: '#1f8b6b' },
+                                ticks: { callback: v => v.toFixed(0), color: '#1f8b6b' },
+                                grid: { drawOnChartArea: false }
+                            },
+                            x: { ticks: { maxRotation: 45, font: { size: 11 } },
+                                grid: { display: false } }
+                        }
+                    }
+                });
+            }
+
+            function updateRankList(vehicles, regularMonths) {
+                let rankings = [];
+                const calcCats = selectedCategories;
+                vehicles.forEach(v => {
+                    let totalVal = 0;
+                    if (selectedMonth !== '全部') {
+                        let candidates = regularMonths.filter(m => extractMonthAbbr(m) === selectedMonth);
+                        if (selectedYear !== '全部') {
+                            candidates = candidates.filter(m => extractYear(m) === selectedYear);
+                        }
+                        const matchedMonth = candidates[0];
+                        const md = matchedMonth ? v.months[matchedMonth] : null;
+                        if (md) {
+                            calcCats.forEach(cat => {
+                                const p = md[cat];
+                                if (p) totalVal += rankType === 'rm' ? (p.rm || 0) : (p.liter || 0);
+                            });
+                        }
+                    } else if (selectedYear !== '全部') {
+                        const yearMonths = regularMonths.filter(m => extractYear(m) === selectedYear);
+                        yearMonths.forEach(m => {
+                            const md = v.months[m];
+                            if (md) {
+                                calcCats.forEach(cat => {
+                                    const p = md[cat];
+                                    if (p) totalVal += rankType === 'rm' ? (p.rm || 0) : (p.liter ||
+                                        0);
+                                });
+                            }
+                        });
+                    } else {
+                        regularMonths.forEach(m => {
+                            const md = v.months[m];
+                            if (md) {
+                                calcCats.forEach(cat => {
+                                    const p = md[cat];
+                                    if (p) totalVal += rankType === 'rm' ? (p.rm || 0) : (p.liter ||
+                                        0);
+                                });
+                            }
+                        });
+                    }
+                    rankings.push({ vehicle: v.vehicle || '-', brand: v.brand || '-', type: v.type || '-', value: totalVal });
+                });
+                rankings.sort((a, b) => b.value - a.value);
+                const top20 = rankings.slice(0, 20);
+                if (top20.length === 0) {
+                    rankList.innerHTML = '<li class="rank-empty"><i class="fa-solid fa-box-open"></i> 暂无数据</li>';
+                    return;
+                }
+                let html = '';
+                top20.forEach((r, i) => {
+                    const displayVal = rankType === 'rm' ? ('RM ' + fmtComma(r.value)) : (fmtComma(r.value) +
+                        ' L');
+                    html += `
+                <li class="rank-item">
+                  <span class="rank-num">${i+1}</span>
+                  <div class="rank-info">
+                    <div class="rank-name">${r.vehicle}</div>
+                    <div class="rank-detail">${r.brand} - ${r.type}</div>
+                  </div>
+                  <span class="rank-value ${rankType==='rm'?'rm-color':'liter-color'}">${displayVal}</span>
+                </li>`;
+                });
+                rankList.innerHTML = html;
+            }
+
+            function updateRankToggleUI() {
+                rankToggleGroup.querySelectorAll('.rank-toggle-btn').forEach(b => {
+                    b.className =
+                        `rank-toggle-btn ${b.dataset.rtype===rankType?(rankType==='rm'?'active-rm':'active-liter'):''}`;
+                });
+            }
+
+            function updatePieToggleUI() {
+                pieToggleGroup.querySelectorAll('.pie-toggle-btn').forEach(b => {
+                    b.className =
+                        `pie-toggle-btn ${b.dataset.ptype===pieType?(pieType==='rm'?'active-rm':'active-liter'):''}`;
+                });
+            }
+
+            function updatePieChart(vehicles, regularMonths) {
+                const ctx = document.getElementById('pieChart');
+                if (!ctx) return;
+                const calcCats = selectedCategories;
+                const catTotals = {};
+                calcCats.forEach(cat => { catTotals[cat] = 0; });
+
+                let monthsToUse = regularMonths;
+                if (selectedMonth !== '全部') {
+                    monthsToUse = regularMonths.filter(m => extractMonthAbbr(m) === selectedMonth);
+                    if (selectedYear !== '全部') {
+                        monthsToUse = monthsToUse.filter(m => extractYear(m) === selectedYear);
+                    }
+                } else if (selectedYear !== '全部') {
+                    monthsToUse = regularMonths.filter(m => extractYear(m) === selectedYear);
+                }
+
+                vehicles.forEach(v => {
+                    monthsToUse.forEach(m => {
+                        const md = v.months[m];
+                        if (!md) return;
+                        calcCats.forEach(cat => {
+                            const p = md[cat];
+                            if (p) {
+                                catTotals[cat] += pieType === 'rm' ? (p.rm || 0) : (p.liter || 0);
+                            }
+                        });
+                    });
+                });
+
+                const labels = [];
+                const data = [];
+                const colors = [];
+                calcCats.forEach((cat, i) => {
+                    if (catTotals[cat] > 0) {
+                        labels.push(cat);
+                        data.push(parseFloat(catTotals[cat].toFixed(2)));
+                        colors.push(PIE_COLORS[i % PIE_COLORS.length]);
+                    }
+                });
+
+                if (pieChart) pieChart.destroy();
+
+                if (data.length === 0) {
+                    pieChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['暂无数据'],
+                            datasets: [{
+                                data: [1],
+                                backgroundColor: ['#eef2f8'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: { enabled: false }
+                            }
+                        }
+                    });
+                    return;
+                }
+
+                pieChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: colors,
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 12,
+                                    boxWidth: 10,
+                                    font: { size: 10 }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(ctx) {
+                                        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : '0.0';
+                                        const value = pieType === 'rm' ? ('RM ' + fmtComma(ctx.parsed)) : (fmtComma(ctx.parsed) + ' L');
+                                        return ctx.label + ': ' + value + ' (' + percentage + '%)';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function renderCategoryChips() {
+                const wrap = document.getElementById('categoryChipsWrap');
+                if (!wrap) return;
+                const allCats = ['全部', ...CATEGORIES];
+                let html = '';
+                const isAll = selectedCategories.length === CATEGORIES.length;
+                allCats.forEach(cat => {
+                    let active = false;
+                    if (cat === '全部') active = isAll;
+                    else active = !isAll && selectedCategories.includes(cat);
+                    const cls = 'category-chip' + (cat === '全部' ? ' all-chip' : '') + (active ? ' active' :
+                        '');
+                    html +=
+                        `<span class="${cls}" data-cat="${cat.replace(/"/g,'&quot;')}">${cat==='全部'?'全部':cat}</span>`;
+                });
+                wrap.innerHTML = html;
+                wrap.querySelectorAll('.category-chip').forEach(chip => {
+                    chip.addEventListener('click', function() {
+                        const cat = this.dataset.cat;
+                        if (cat === '全部') {
+                            selectedCategories = [...CATEGORIES];
+                        } else {
+                            if (selectedCategories.length === CATEGORIES.length) {
+                                selectedCategories = [cat];
+                            } else if (selectedCategories.includes(cat)) {
+                                selectedCategories = selectedCategories.filter(c => c !== cat);
+                                if (selectedCategories.length === 0) selectedCategories = [...CATEGORIES];
+                            } else {
+                                selectedCategories.push(cat);
+                                if (selectedCategories.length === CATEGORIES.length)
+                                    selectedCategories = [...CATEGORIES];
+                            }
+                        }
+                        cachedData && render(cachedData);
+                    });
+                });
+            }
+
+            function openVehicleModal() {
+                tempSelectedVehicles = [...selectedVehicles];
+                vehicleSearchTerm = '';
+                modalSearchVehicle.value = '';
+                renderVehicleModalList();
+                vehicleModalOverlay.classList.add('show');
+                vehicleModalVisible = true;
+                setTimeout(() => modalSearchVehicle.focus(), 150);
+            }
+
+            function closeVehicleModal() {
+                vehicleModalOverlay.classList.remove('show');
+                vehicleModalVisible = false;
+            }
+
+            function renderVehicleModalList() {
+                const vehicles = cachedData ? cachedData.vehicles : [];
+                const term = vehicleSearchTerm.toLowerCase().trim();
+                const filtered = term ? vehicles.filter(v => (v.vehicle || '').toLowerCase().includes(term) || (v
+                    .brand || '').toLowerCase().includes(term) || (v.type || '').toLowerCase().includes(term)) : vehicles;
+                if (filtered.length === 0) {
+                    modalVehicleList.innerHTML =
+                        '<div class="rank-empty" style="padding:30px;"><i class="fa-solid fa-search"></i> 无匹配车牌</div>';
+                    return;
+                }
+                let html = '';
+                filtered.forEach(v => {
+                    const vName = v.vehicle || '-';
+                    const isSel = tempSelectedVehicles.includes(vName);
+                    html += `
+                <div class="modal-vehicle-item${isSel?' selected':''}" data-value="${vName.replace(/"/g,'&quot;')}">
+                  <div class="check-icon"><i class="fa-solid fa-check"></i></div>
+                  <span class="v-name">${vName}</span>
+                  <span class="v-detail">${v.brand||''} - ${v.type||''}</span>
+                </div>`;
+                });
+                modalVehicleList.innerHTML = html;
+                modalVehicleList.querySelectorAll('.modal-vehicle-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const val = this.dataset.value;
+                        if (tempSelectedVehicles.includes(val)) {
+                            tempSelectedVehicles = tempSelectedVehicles.filter(v => v !== val);
+                        } else {
+                            tempSelectedVehicles.push(val);
+                        }
+                        renderVehicleModalList();
+                    });
+                });
+            }
+
+            function applyVehicleFilter() {
+                selectedVehicles = [...tempSelectedVehicles];
+                closeVehicleModal();
+                cachedData && render(cachedData);
+                const name = selectedVehicles.length > 0 ? selectedVehicles.join(', ') : '全部';
+                showToast(`车牌筛选: ${name}`);
+            }
+
+            function clearVehicleFilter() {
+                tempSelectedVehicles = [];
+                renderVehicleModalList();
+            }
+
+            function openTypeModal() {
+                tempSelectedTypes = [...selectedTypes];
+                typeSearchTerm = '';
+                modalSearchType.value = '';
+                renderTypeModalList();
+                typeModalOverlay.classList.add('show');
+                typeModalVisible = true;
+                setTimeout(() => modalSearchType.focus(), 150);
+            }
+
+            function closeTypeModal() {
+                typeModalOverlay.classList.remove('show');
+                typeModalVisible = false;
+            }
+
+            function renderTypeModalList() {
+                const vehicles = cachedData ? cachedData.vehicles : [];
+                const combos = [...new Set(vehicles.map(v => getTypeCombo(v)))].sort();
+                const term = typeSearchTerm.toLowerCase().trim();
+                const filtered = term ? combos.filter(c => c.toLowerCase().includes(term)) : combos;
+                if (filtered.length === 0) {
+                    modalTypeList.innerHTML =
+                        '<div class="rank-empty" style="padding:30px;"><i class="fa-solid fa-search"></i> 无匹配车型</div>';
+                    return;
+                }
+                let html = '';
+                filtered.forEach(c => {
+                    const isSel = tempSelectedTypes.includes(c);
+                    html += `
+                <div class="modal-vehicle-item${isSel?' selected':''}" data-value="${c.replace(/"/g,'&quot;')}">
+                  <div class="check-icon"><i class="fa-solid fa-check"></i></div>
+                  <span class="v-name">${c}</span>
+                </div>`;
+                });
+                modalTypeList.innerHTML = html;
+                modalTypeList.querySelectorAll('.modal-vehicle-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const val = this.dataset.value;
+                        if (tempSelectedTypes.includes(val)) {
+                            tempSelectedTypes = tempSelectedTypes.filter(v => v !== val);
+                        } else {
+                            tempSelectedTypes.push(val);
+                        }
+                        renderTypeModalList();
+                    });
+                });
+            }
+
+            function applyTypeFilter() {
+                selectedTypes = [...tempSelectedTypes];
+                closeTypeModal();
+                cachedData && render(cachedData);
+                const name = selectedTypes.length > 0 ? selectedTypes.join(', ') : '全部';
+                showToast(`车型筛选: ${name}`);
+            }
+
+            function clearTypeFilter() {
+                tempSelectedTypes = [];
+                renderTypeModalList();
+            }
+
+            function openFuelModal() {
+                tempSelectedFuels = [...selectedFuels];
+                fuelSearchTerm = '';
+                modalSearchFuel.value = '';
+                renderFuelModalList();
+                fuelModalOverlay.classList.add('show');
+                fuelModalVisible = true;
+                setTimeout(() => modalSearchFuel.focus(), 150);
+            }
+
+            function closeFuelModal() {
+                fuelModalOverlay.classList.remove('show');
+                fuelModalVisible = false;
+            }
+
+            function renderFuelModalList() {
+                const vehicles = cachedData ? cachedData.vehicles : [];
+                const fuels = getFuelList(vehicles);
+                const term = fuelSearchTerm.toLowerCase().trim();
+                const filtered = term ? fuels.filter(f => f.toLowerCase().includes(term)) : fuels;
+                if (filtered.length === 0) {
+                    modalFuelList.innerHTML =
+                        '<div class="rank-empty" style="padding:30px;"><i class="fa-solid fa-search"></i> 无匹配燃油种类</div>';
+                    return;
+                }
+                let html = '';
+                filtered.forEach(f => {
+                    const isSel = tempSelectedFuels.includes(f);
+                    html += `
+                <div class="modal-vehicle-item${isSel?' selected':''}" data-value="${f.replace(/"/g,'&quot;')}">
+                  <div class="check-icon"><i class="fa-solid fa-check"></i></div>
+                  <span class="v-name">${f}</span>
+                </div>`;
+                });
+                modalFuelList.innerHTML = html;
+                modalFuelList.querySelectorAll('.modal-vehicle-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const val = this.dataset.value;
+                        if (tempSelectedFuels.includes(val)) {
+                            tempSelectedFuels = tempSelectedFuels.filter(v => v !== val);
+                        } else {
+                            tempSelectedFuels.push(val);
+                        }
+                        renderFuelModalList();
+                    });
+                });
+            }
+
+            function applyFuelFilter() {
+                selectedFuels = [...tempSelectedFuels];
+                closeFuelModal();
+                cachedData && render(cachedData);
+                const name = selectedFuels.length > 0 ? selectedFuels.join(', ') : '全部';
+                showToast(`燃油种类筛选: ${name}`);
+            }
+
+            function clearFuelFilter() {
+                tempSelectedFuels = [];
+                renderFuelModalList();
+            }
+
+            function exportToExcel() {
+                if (!cachedData || !cachedData.vehicles) {
+                    showToast('暂无数据可导出', 'fa-triangle-exclamation');
+                    return;
+                }
+
+                const allMonths = cachedData.months;
+                const regular = allMonths.filter(m => !isExcludedMonth(m));
+                const excluded = allMonths.filter(isExcludedMonth);
+
+                let filtered = regular;
+                if (selectedYear !== '全部') filtered = filtered.filter(m => extractYear(m) === selectedYear);
+                if (selectedMonth !== '全部') filtered = filtered.filter(m => extractMonthAbbr(m) === selectedMonth);
+                const displayMonths = selectedMonth === '全部'
+                    ? [...filtered, ...(selectedYear !== '全部' ? excluded.filter(m => extractYear(m) === selectedYear) : excluded)]
+                    : filtered;
+
+                const filteredVehicles = getFilteredVehicles(cachedData.vehicles);
+
+                if (!filteredVehicles.length || !displayMonths.length) {
+                    showToast('当前筛选无数据可导出', 'fa-triangle-exclamation');
+                    return;
+                }
+
+                const sortedVehicles = [...filteredVehicles].sort((a, b) => {
+                    const typeA = getTypeCombo(a);
+                    const typeB = getTypeCombo(b);
+                    return typeA.localeCompare(typeB);
+                });
+
+                function getVal(v, m, cat, isRM) {
+                    const md = v.months[m];
+                    if (!md) return 0;
+                    const p = md[cat];
+                    if (!p) return 0;
+                    return isRM ? (p.rm || 0) : (p.liter || 0);
+                }
+
+                const valueTypes = [];
+                if (showRM) valueTypes.push({ key: 'rm', label: 'RM' });
+                if (showLiter) valueTypes.push({ key: 'liter', label: 'Liter' });
+                if (valueTypes.length === 0) valueTypes.push({ key: 'rm', label: 'RM' });
+
+                const exportData = [];
+                const exportCats = selectedCategories;
+
+                const headerRow1 = ['车牌', '车型', '燃油'];
+                const monthColSpans = [];
+                displayMonths.forEach(m => {
+                    let span = 0;
+                    exportCats.forEach(cat => { span += valueTypes.length; });
+                    monthColSpans.push(span);
+                    headerRow1.push(m);
+                    for (let i = 1; i < span; i++) headerRow1.push('');
+                });
+                exportData.push(headerRow1);
+
+                const headerRow2 = ['', '', ''];
+                displayMonths.forEach(m => {
+                    exportCats.forEach(cat => {
+                        for (let i = 0; i < valueTypes.length; i++) {
+                            headerRow2.push(i === 0 ? cat : '');
+                        }
+                    });
+                });
+                exportData.push(headerRow2);
+
+                const headerRow3 = ['', '', ''];
+                displayMonths.forEach(m => {
+                    exportCats.forEach(cat => {
+                        valueTypes.forEach(vt => { headerRow3.push(vt.label); });
+                    });
+                });
+                exportData.push(headerRow3);
+
+                let lastType = null;
+                let typeSubtotals = {};
+                let categoryTotals = {};
+
+                sortedVehicles.forEach(v => {
+                    const type = getTypeCombo(v);
+
+                    if (lastType !== null && type !== lastType) {
+                        exportData.push(generateSubtotalRow('车型小计', lastType, displayMonths, typeSubtotals[lastType]));
+                    }
+
+                    const row = [v.vehicle || '-', type, v.fuel || '-'];
+                    displayMonths.forEach(m => {
+                        exportCats.forEach(cat => {
+                            valueTypes.forEach(vt => {
+                                row.push(getVal(v, m, cat, vt.key === 'rm'));
+                            });
+                        });
+                    });
+                    exportData.push(row);
+
+                    if (!typeSubtotals[type]) {
+                        typeSubtotals[type] = {};
+                        displayMonths.forEach(m => {
+                            typeSubtotals[type][m] = {};
+                            exportCats.forEach(cat => { typeSubtotals[type][m][cat] = { rm: 0, liter: 0 }; });
+                        });
+                    }
+                    displayMonths.forEach(m => {
+                        exportCats.forEach(cat => {
+                            typeSubtotals[type][m][cat].rm += getVal(v, m, cat, true);
+                            typeSubtotals[type][m][cat].liter += getVal(v, m, cat, false);
+                        });
+                    });
+
+                    exportCats.forEach(cat => {
+                        if (!categoryTotals[cat]) categoryTotals[cat] = { rm: 0, liter: 0 };
+                        displayMonths.forEach(m => {
+                            categoryTotals[cat].rm += getVal(v, m, cat, true);
+                            categoryTotals[cat].liter += getVal(v, m, cat, false);
+                        });
+                    });
+
+                    lastType = type;
+                });
+
+                if (lastType !== null) {
+                    exportData.push(generateSubtotalRow('车型小计', lastType, displayMonths, typeSubtotals[lastType]));
+                }
+
+                exportData.push([]);
+
+                exportCats.forEach(cat => {
+                    exportData.push(generateGrandRow(cat + ' 总计', displayMonths, cat, categoryTotals[cat]));
+                });
+
+                exportData.push([]);
+
+                const allCatsTotal = { rm: 0, liter: 0 };
+                exportCats.forEach(cat => {
+                    if (categoryTotals[cat]) {
+                        allCatsTotal.rm += categoryTotals[cat].rm;
+                        allCatsTotal.liter += categoryTotals[cat].liter;
+                    }
+                });
+                exportData.push(generateGrandRow('所有类别总计', displayMonths, null, allCatsTotal));
+
+                function generateSubtotalRow(label, type, months, subtotalData) {
+                    const row = [label, type || '', ''];
+                    months.forEach(m => {
+                        exportCats.forEach(cat => {
+                            valueTypes.forEach(vt => {
+                                const sd = subtotalData && subtotalData[m] && subtotalData[m][cat];
+                                row.push(sd ? (vt.key === 'rm' ? sd.rm : sd.liter) : 0);
+                            });
+                        });
+                    });
+                    return row;
+                }
+
+                function generateGrandRow(label, months, cat, totalData) {
+                    const row = [label, '', ''];
+                    months.forEach(m => {
+                        if (cat) {
+                            valueTypes.forEach(vt => {
+                                row.push(totalData ? (vt.key === 'rm' ? totalData.rm : totalData.liter) : 0);
+                            });
+                        } else {
+                            exportCats.forEach(c => {
+                                valueTypes.forEach(vt => {
+                                    row.push(totalData ? (vt.key === 'rm' ? totalData.rm : totalData.liter) : 0);
+                                });
+                            });
+                        }
+                    });
+                    return row;
+                }
+
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet(exportData);
+
+                const fixedCols = 3;
+                const totalCols = fixedCols + displayMonths.reduce((sum, m) => sum + exportCats.length * valueTypes.length, 0);
+                const totalRows = exportData.length;
+
+                const colWidths = [
+                    { wch: 18 }, { wch: 20 }, { wch: 14 }
+                ];
+                displayMonths.forEach(m => {
+                    exportCats.forEach(cat => {
+                        valueTypes.forEach(vt => { colWidths.push({ wch: 14 }); });
+                    });
+                });
+                ws['!cols'] = colWidths;
+
+                const merges = [];
+                let colOffset = fixedCols;
+                displayMonths.forEach((m, idx) => {
+                    const span = monthColSpans[idx];
+                    if (span > 1) {
+                        merges.push({ s: { r: 0, c: colOffset }, e: { r: 0, c: colOffset + span - 1 } });
+                    }
+                    let catCol = colOffset;
+                    exportCats.forEach(cat => {
+                        if (valueTypes.length > 1) {
+                            merges.push({ s: { r: 1, c: catCol }, e: { r: 1, c: catCol + valueTypes.length - 1 } });
+                        }
+                        catCol += valueTypes.length;
+                    });
+                    colOffset += span;
+                });
+                ws['!merges'] = merges;
+
+                ws['!freeze'] = { xSplit: fixedCols, ySplit: 3, topLeftCell: XLSX.utils.encode_cell({ r: 3, c: fixedCols }), activePane: 'bottomRight', state: 'frozen' };
+
+                for (let r = 3; r < totalRows; r++) {
+                    for (let c = fixedCols; c < totalCols; c++) {
+                        const cellRef = XLSX.utils.encode_cell({ r: r, c: c });
+                        if (ws[cellRef] && typeof ws[cellRef].v === 'number') {
+                            ws[cellRef].z = '#,##0.00';
+                        }
+                    }
+                }
+
+                XLSX.utils.book_append_sheet(wb, ws, '燃油数据');
+
+                const now = new Date();
+                const timestamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+                const filterInfo = [];
+                if (selectedYear !== '全部') filterInfo.push(selectedYear);
+                if (selectedMonth !== '全部') filterInfo.push(selectedMonth);
+                if (selectedVehicles.length > 0) filterInfo.push(selectedVehicles.join('_'));
+                else if (selectedTypes.length > 0) filterInfo.push(selectedTypes.join('_'));
+                else if (selectedFuels.length > 0) filterInfo.push(selectedFuels.join('_'));
+                const filterStr = filterInfo.length > 0 ? '_' + filterInfo.join('_') : '';
+                const filename = `Fuel_Report${filterStr}_${timestamp}.xlsx`;
+
+                XLSX.writeFile(wb, filename);
+                showToast(`已导出: ${filename}`, 'fa-file-excel');
+            }
+
+            function render(data) {
+                if (!data || !data.months || !data.vehicles) {
+                    tableBody.innerHTML =
+                        `<tr><td colspan="10" class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i> 数据格式错误</td></tr>`;
+                    return false;
+                }
+                const allMonths = data.months;
+                const regular = allMonths.filter(m => !isExcludedMonth(m));
+                const excluded = allMonths.filter(isExcludedMonth);
+                const years = [...new Set(regular.map(extractYear))].sort();
+                const monthAbbrs = [...new Set(regular.map(extractMonthAbbr))].sort((a, b) => monthSortKey(a) - monthSortKey(
+                    b));
+                if (!yearOptionsBuilt) {
+                    yearSelector.innerHTML = '<option value="全部">全部年份</option>';
+                    years.forEach(y => yearSelector.innerHTML += `<option value="${y}">${y}</option>`);
+                    const cy = String(new Date().getFullYear());
+                    yearSelector.value = years.includes(cy) ? cy : (years[0] || '全部');
+                    selectedYear = yearSelector.value;
+                    yearOptionsBuilt = true;
+                }
+                let filtered = regular;
+                if (selectedYear !== '全部') filtered = filtered.filter(m => extractYear(m) === selectedYear);
+                if (selectedMonth !== '全部') filtered = filtered.filter(m => extractMonthAbbr(m) === selectedMonth);
+                const display = selectedMonth === '全部' ? [...filtered, ...(selectedYear !== '全部' ? excluded.filter(m =>
+                    extractYear(m) === selectedYear) : excluded)] : filtered;
+                const allVehicles = data.vehicles;
+                const filteredVehicles = getFilteredVehicles(allVehicles);
+                const sortedVehicles = sortVehicles(filteredVehicles);
+                const totalVehicleCount = allVehicles.length;
+                const allTypeCombos = [...new Set(allVehicles.map(v => getTypeCombo(v)))];
+                const totalTypeCount = allTypeCombos.length;
+                const allFuels = getFuelList(allVehicles);
+                const totalFuelCount = allFuels.length;
+                const currentVehicleCount = (selectedTypes.length > 0 || selectedFuels.length > 0) ? sortedVehicles.length :
+                    (selectedVehicles.length > 0 ? selectedVehicles.length : totalVehicleCount);
+                statVehicles.textContent = currentVehicleCount;
+                statVehiclesSub.textContent = selectedVehicles.length > 0 ? `已选: ${selectedVehicles.length}辆` : (
+                    selectedTypes.length > 0 ? `${selectedTypes.length}个车型` : (selectedFuels.length > 0 ?
+                        `${selectedFuels.length}种燃油` : '点击选择车牌'));
+                statTypes.textContent = selectedTypes.length > 0 ? selectedTypes.length : totalTypeCount;
+                statTypesSub.textContent = selectedTypes.length > 0 ? `已选: ${selectedTypes.length}个` : (
+                    selectedVehicles.length > 0 ? `车牌: ${selectedVehicles.length}辆` : (selectedFuels.length > 0 ?
+                        `${selectedFuels.length}种燃油` : '点击选择车型'));
+                statFuels.textContent = selectedFuels.length > 0 ? selectedFuels.length : totalFuelCount;
+                statFuelsSub.textContent = selectedFuels.length > 0 ? `已选: ${selectedFuels.length}种` : (
+                    selectedVehicles.length > 0 ? `车牌: ${selectedVehicles.length}辆` : (selectedTypes.length > 0 ?
+                        `${selectedTypes.length}个车型` : '点击选择燃油种类'));
+                let totalRM = 0,
+                    totalLiter = 0;
+                const calcCats = selectedCategories;
+                sortedVehicles.forEach(v => {
+                    filtered.forEach(m => {
+                        const md = v.months[m];
+                        if (!md) return;
+                        calcCats.forEach(cat => {
+                            const p = md[cat];
+                            if (p) { totalRM += p.rm || 0;
+                                totalLiter += p.liter || 0; }
+                        });
+                    });
+                });
+                statTotalRM.textContent = fmtComma(totalRM);
+                statTotalLiter.textContent = fmtComma(totalLiter);
+                updateTrendChart(regular, sortedVehicles);
+                updateRankList(sortedVehicles, regular);
+                updateRankToggleUI();
+                updatePieChart(sortedVehicles, regular);
+                updatePieToggleUI();
+                if (vehicleModalVisible && cachedData) renderVehicleModalList();
+                if (typeModalVisible && cachedData) renderTypeModalList();
+                if (fuelModalVisible && cachedData) renderFuelModalList();
+                let head =
+                    `<tr class="filter-row"><td class="col-fixed" colspan="2"><span class="filter-label"><i class="fa-solid fa-calendar-alt"></i> 月份筛选</span><select class="month-selector" id="monthSelector"><option value="全部">全部月份</option>`;
+                monthAbbrs.forEach(m => head += `<option value="${m}">${m}</option>`);
+                head += `</select><span class="category-filter-wrap"><span class="filter-label"><i class="fa-solid fa-gas-pump"></i> 类别</span><span class="category-chips" id="categoryChipsWrap"></span></span></td>`;
+                head +=
+                    `<td colspan="${display.length+2}" style="background:#f8faff;"><span style="font-size:.75rem;color:#5e7390;"><i class="fa-solid fa-filter"></i> 共 ${filtered.length} 个月份${selectedMonth==='全部'&&display.length>filtered.length?` + ${display.length-filtered.length} 个汇总`:''}</span></td></tr>`;
+                head += `<tr>`;
+                const fixedCols = ['vehicle', 'brand', 'type', 'fuel'];
+                const fixedLabels = ['车牌', '品牌', '车型', '燃油'];
+                const fixedIcons = ['car', 'tag', 'shapes', 'gas-pump'];
+                fixedCols.forEach((col, i) => {
+                    const isFrozen = (col === 'vehicle');
+                    const cls = isFrozen ? ' col-fixed sortable-th' : ' sortable-th';
+                    head +=
+                        `<th class="${cls}" data-sort="${col}"><i class="fa-solid fa-${fixedIcons[i]}"></i> ${fixedLabels[i]} ${getSortIcon(col)}</th>`;
+                });
+                display.forEach(m => {
+                    const isSum = isExcludedMonth(m);
+                    head +=
+                        `<th class="col-month"><span style="background:${isSum?'#f0e6d0':'#eef4fd'};padding:2px 10px;border-radius:40px;font-size:.75rem;color:${isSum?'#8a6e3b':'#1f3a5e'};font-weight:${isSum?'700':'500'}">${m}</span></th>`;
+                });
+                head += `</tr>`;
+                tableHead.innerHTML = head;
+                renderCategoryChips();
+                const monthSelector = document.getElementById('monthSelector');
+                if (monthSelector) monthSelector.value = monthAbbrs.includes(selectedMonth) ? selectedMonth : '全部';
+                let body = '';
+                if (!sortedVehicles.length || !display.length) {
+                    tableBody.innerHTML =
+                        `<tr><td colspan="${display.length+4}" class="empty-state"><i class="fa-solid fa-box-open"></i> 暂无数据</td></tr>`;
+                    return true;
+                }
+                sortedVehicles.forEach(v => {
+                    body += `<tr>`;
+                    body +=
+                        `<td class="col-fixed"><div class="vehicle-cell">${v.vehicle||'-'}</div></td>`;
+                    body +=
+                        `<td>${v.brand||'-'}</td>`;
+                    body +=
+                        `<td>${v.type||'-'}</td>`;
+                    body +=
+                        `<td>${v.fuel||'-'}</td>`;
+                    display.forEach(m => {
+                        const md = v.months[m];
+                        body += `<td class="col-month">`;
+                        if (!md) { body +=
+                                `<div class="category-item"><span class="cat-name">—</span></div>`; } else {
+                            CATEGORIES.forEach(cat => {
+                                if (!selectedCategories.includes(cat)) return;
+                                const p = md[cat];
+                                const rm = p ? fmtComma(p.rm) : '0.00';
+                                const lit = p ? fmtComma(p.liter) : '0.00';
+                                const hasVal = p && (p.rm || p.liter);
+                                if (!hasVal) {
+                                    body +=
+                                        `<div class="category-item"><span class="cat-name">${cat}</span><div class="val-row"><span style="color:#aaa;">—</span></div></div>`;
+                                    return;
+                                }
+                                let valHtml = '';
+                                if (showRM) valHtml +=
+                                    `<span class="rm-value">${rm}</span>`;
+                                if (showLiter) valHtml +=
+                                    `<span class="liter-value">${lit}</span>`;
+                                if (!showRM && !showLiter) valHtml =
+                                    `<span style="color:#b0c7df;">—</span>`;
+                                body +=
+                                    `<div class="category-item"><span class="cat-name">${cat}</span><div class="val-row">${valHtml}</div></div>`;
+                            });
+                        }
+                        body += `</td>`;
+                    });
+                    body += `</tr>`;
+                });
+                tableBody.innerHTML = body;
+                tableHead.querySelectorAll('.sortable-th').forEach(th => {
+                    th.addEventListener('click', function(e) {
+                        const sortKey = this.dataset.sort;
+                        if (sortKey) handleSortClick(sortKey);
+                    });
+                });
+                return true;
+            }
+
+            function loadData(force = false) {
+                if (isRefreshing) return;
+                isRefreshing = true;
+                if (force) setLoading(true);
+                fetchData(force).then(d => {
+                        cachedData = d.fuel || d;
+                        summaryData = d['车辆花费与收入'] || null;
+                        render(cachedData);
+                        renderSummary();
+                    })
+                    .catch(err => {
+                        tableBody.innerHTML =
+                            `<tr><td colspan="10" class="empty-state" style="color:#b33;"><i class="fa-solid fa-triangle-exclamation"></i> 加载失败: ${err.message}</td></tr>`;
+                        showToast('加载失败: ' + err.message, 'fa-triangle-exclamation');
+                    }).finally(() => { isRefreshing = false;
+                        setLoading(false); });
+            }
+
+            function updateToggle() {
+                toggleGroup.querySelectorAll('.toggle-btn').forEach(b => {
+                    b.className =
+                        `toggle-btn ${b.dataset.type==='rm'?(showRM?'active-rm':''):(showLiter?'active-liter':'')}`;
+                });
+            }
+
+            function resetAllFilters() {
+                showRM = true;
+                showLiter = true;
+                selectedYear = '全部';
+                selectedMonth = '全部';
+                selectedVehicles = [];
+                selectedTypes = [];
+                selectedFuels = [];
+                selectedCategories = [...CATEGORIES];
+                rankType = 'rm';
+                pieType = 'rm';
+                sortState = { column: null, direction: 0 };
+                yearSelector.value = '全部';
+                updateToggle();
+                updateRankToggleUI();
+                updatePieToggleUI();
+                cachedData && render(cachedData);
+                showToast('已复原所有筛选条件', 'fa-undo');
+            }
+
+            // ==================== Summary Report ====================
+            function getSummaryFilteredVehicles(allVehicles) {
+                let result = [...allVehicles];
+                if (summaryVehicles.length > 0) {
+                    result = result.filter(v => summaryVehicles.includes(v.vehicle));
+                }
+                if (summaryTypes.length > 0) {
+                    result = result.filter(v => summaryTypes.includes(getTypeCombo(v)));
+                }
+                if (summaryFuels.length > 0) {
+                    result = result.filter(v => summaryFuels.includes(v.fuel || '-'));
+                }
+                return result;
+            }
+
+            function getSummaryValue(v, month, cat) {
+                const md = v.months[month];
+                if (!md) return 0;
+                const val = md[cat];
+                return val || 0;
+            }
+
+            function getSummaryExpense(v, month) {
+                let total = 0;
+                EXPENSE_CATEGORIES.forEach(cat => {
+                    if (summaryCategories.includes(cat)) {
+                        total += getSummaryValue(v, month, cat);
+                    }
+                });
+                return total;
+            }
+
+            function getSummaryRevenue(v, month) {
+                return summaryCategories.includes('Revenue') ? getSummaryValue(v, month, 'Revenue') : 0;
+            }
+
+            function getSummaryProfit(v, month) {
+                return summaryCategories.includes('Profit') ? getSummaryValue(v, month, 'Profit') : 0;
+            }
+
+            function updateSummaryLineToggleUI() {
+                summaryLineToggle.querySelectorAll('.summary-line-btn').forEach(b => {
+                    const line = b.dataset.line;
+                    let activeClass = '';
+                    if (line === 'expense') activeClass = 'active-expense';
+                    else if (line === 'revenue') activeClass = 'active-revenue';
+                    else activeClass = 'active-profit';
+                    b.className = `summary-line-btn ${summaryLineShow[line] ? activeClass : ''}`;
+                });
+            }
+
+            function updateSummaryRankToggleUI() {
+                summaryRankToggleGroup.querySelectorAll('.rank-toggle-btn').forEach(b => {
+                    const isActive = b.dataset.srtype === summaryRankType;
+                    b.className = 'rank-toggle-btn active-expense';
+                    b.style.opacity = isActive ? '1' : '0.5';
+                });
+            }
+
+            function updateSummaryTrendChart(vehicles, regularMonths) {
+                const ctx = document.getElementById('summaryTrendChart');
+                if (!ctx) return;
+
+                let monthsToUse = regularMonths;
+                if (summaryMonth !== '全部') {
+                    monthsToUse = regularMonths.filter(m => extractMonthAbbr(m) === summaryMonth);
+                    if (summaryYear !== '全部') {
+                        monthsToUse = monthsToUse.filter(m => extractYear(m) === summaryYear);
+                    }
+                } else if (summaryYear !== '全部') {
+                    monthsToUse = regularMonths.filter(m => extractYear(m) === summaryYear);
+                }
+
+                const sortedMonths = [...monthsToUse].sort((a, b) => {
+                    const ya = extractYear(a),
+                        yb = extractYear(b);
+                    if (ya !== yb) return ya.localeCompare(yb);
+                    return monthSortKey(extractMonthAbbr(a)) - monthSortKey(extractMonthAbbr(b));
+                });
+
+                const labels = sortedMonths;
+                const datasets = [];
+
+                if (summaryLineShow.expense) {
+                    const data = sortedMonths.map(m => {
+                        let sum = 0;
+                        vehicles.forEach(v => { sum += getSummaryExpense(v, m); });
+                        return parseFloat(sum.toFixed(2));
+                    });
+                    datasets.push({
+                        label: '总费用',
+                        data: data,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239,68,68,0.06)',
+                        borderWidth: 2,
+                        tension: 0.35,
+                        fill: true,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#ef4444'
+                    });
+                }
+
+                if (summaryLineShow.revenue) {
+                    const data = sortedMonths.map(m => {
+                        let sum = 0;
+                        vehicles.forEach(v => { sum += getSummaryRevenue(v, m); });
+                        return parseFloat(sum.toFixed(2));
+                    });
+                    datasets.push({
+                        label: '总收入',
+                        data: data,
+                        borderColor: '#1f8b6b',
+                        backgroundColor: 'rgba(31,139,107,0.06)',
+                        borderWidth: 2,
+                        tension: 0.35,
+                        fill: true,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#1f8b6b'
+                    });
+                }
+
+                if (summaryLineShow.profit) {
+                    const data = sortedMonths.map(m => {
+                        let sum = 0;
+                        vehicles.forEach(v => { sum += getSummaryProfit(v, m); });
+                        return parseFloat(sum.toFixed(2));
+                    });
+                    datasets.push({
+                        label: '损益',
+                        data: data,
+                        borderColor: '#e6a817',
+                        backgroundColor: 'rgba(230,168,23,0.06)',
+                        borderWidth: 2,
+                        tension: 0.35,
+                        fill: true,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#e6a817'
+                    });
+                }
+
+                if (summaryTrendChart) summaryTrendChart.destroy();
+
+                if (datasets.length === 0) {
+                    summaryTrendChart = new Chart(ctx, {
+                        type: 'line',
+                        data: { labels: ['暂无数据'], datasets: [{ data: [0], borderColor: '#eef2f8', borderWidth: 1 }] },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    });
+                    return;
+                }
+
+                summaryTrendChart = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels: labels, datasets: datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16, boxWidth: 8,
+                                    font: { size: 10 } } },
+                            tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label +
+                                        ': RM ' + ctx.parsed.y.toFixed(2); } } }
+                        },
+                        scales: {
+                            y: {
+                                title: { display: true, text: 'RM' },
+                                ticks: { callback: v => v.toFixed(0) },
+                                grid: { color: '#eef3f9' }
+                            },
+                            x: { ticks: { maxRotation: 45, font: { size: 10 } },
+                                grid: { display: false } }
+                        }
+                    }
+                });
+            }
+
+            function updateSummaryRankList(vehicles, regularMonths) {
+                let monthsToUse = regularMonths;
+                if (summaryMonth !== '全部') {
+                    monthsToUse = regularMonths.filter(m => extractMonthAbbr(m) === summaryMonth);
+                    if (summaryYear !== '全部') {
+                        monthsToUse = monthsToUse.filter(m => extractYear(m) === summaryYear);
+                    }
+                } else if (summaryYear !== '全部') {
+                    monthsToUse = regularMonths.filter(m => extractYear(m) === summaryYear);
+                }
+
+                let rankings = [];
+                vehicles.forEach(v => {
+                    let expense = 0,
+                        revenue = 0,
+                        profit = 0;
+                    monthsToUse.forEach(m => {
+                        expense += getSummaryExpense(v, m);
+                        revenue += getSummaryRevenue(v, m);
+                        profit += getSummaryProfit(v, m);
+                    });
+                    rankings.push({
+                        vehicle: v.vehicle || '-',
+                        brand: v.brand || '-',
+                        type: v.type || '-',
+                        expense: parseFloat(expense.toFixed(2)),
+                        revenue: parseFloat(revenue.toFixed(2)),
+                        profit: parseFloat(profit.toFixed(2))
+                    });
+                });
+
+                const sortMap = {
+                    'expense_high': (a, b) => b.expense - a.expense,
+                    'expense_low': (a, b) => a.expense - b.expense,
+                    'revenue_high': (a, b) => b.revenue - a.revenue,
+                    'revenue_low': (a, b) => a.revenue - b.revenue,
+                    'profit_high': (a, b) => b.profit - a.profit,
+                    'profit_low': (a, b) => a.profit - b.profit
+                };
+                rankings.sort(sortMap[summaryRankType] || sortMap['expense_high']);
+                const top20 = rankings.slice(0, 20);
+
+                if (top20.length === 0) {
+                    summaryRankList.innerHTML = '<li class="rank-empty"><i class="fa-solid fa-box-open"></i> 暂无数据</li>';
+                    return;
+                }
+
+                let html = '';
+                top20.forEach((r, i) => {
+                    let displayVal = '';
+                    let colorClass = '';
+                    if (summaryRankType.includes('expense')) {
+                        displayVal = 'RM ' + fmtComma(r.expense);
+                        colorClass = 'danger-color';
+                    } else if (summaryRankType.includes('revenue')) {
+                        displayVal = 'RM ' + fmtComma(r.revenue);
+                        colorClass = 'liter-color';
+                    } else {
+                        displayVal = 'RM ' + fmtComma(r.profit);
+                        colorClass = 'warn-color';
+                    }
+                    html += `
+                <li class="rank-item">
+                  <span class="rank-num">${i+1}</span>
+                  <div class="rank-info">
+                    <div class="rank-name">${r.vehicle}</div>
+                    <div class="rank-detail">${r.brand} - ${r.type}</div>
+                  </div>
+                  <span class="rank-value ${colorClass}">${displayVal}</span>
+                </li>`;
+                });
+                summaryRankList.innerHTML = html;
+            }
+
+            function updateSummaryPieChart(vehicles, regularMonths) {
+                const ctx = document.getElementById('summaryPieChart');
+                if (!ctx) return;
+
+                let monthsToUse = regularMonths;
+                if (summaryMonth !== '全部') {
+                    monthsToUse = regularMonths.filter(m => extractMonthAbbr(m) === summaryMonth);
+                    if (summaryYear !== '全部') {
+                        monthsToUse = monthsToUse.filter(m => extractYear(m) === summaryYear);
+                    }
+                } else if (summaryYear !== '全部') {
+                    monthsToUse = regularMonths.filter(m => extractYear(m) === summaryYear);
+                }
+
+                const catTotals = {};
+                EXPENSE_CATEGORIES.forEach(cat => { if (summaryCategories.includes(cat)) catTotals[cat] = 0; });
+
+                vehicles.forEach(v => {
+                    monthsToUse.forEach(m => {
+                        EXPENSE_CATEGORIES.forEach(cat => {
+                            if (summaryCategories.includes(cat)) {
+                                catTotals[cat] += getSummaryValue(v, m, cat);
+                            }
+                        });
+                    });
+                });
+
+                const labels = [];
+                const data = [];
+                const colors = [];
+                EXPENSE_CATEGORIES.forEach((cat, i) => {
+                    if (summaryCategories.includes(cat) && catTotals[cat] > 0) {
+                        labels.push(cat);
+                        data.push(parseFloat(catTotals[cat].toFixed(2)));
+                        colors.push(SUMMARY_PIE_COLORS[i % SUMMARY_PIE_COLORS.length]);
+                    }
+                });
+
+                if (summaryPieChart) summaryPieChart.destroy();
+
+                if (data.length === 0) {
+                    summaryPieChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: { labels: ['暂无数据'], datasets: [{ data: [1], backgroundColor: ['#eef2f8'], borderWidth: 0 }] },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false },
+                                tooltip: { enabled: false } } }
+                    });
+                    return;
+                }
+
+                summaryPieChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{ data: data, backgroundColor: colors, borderWidth: 2, borderColor: '#ffffff' }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 10, boxWidth: 8,
+                                    font: { size: 9 } } },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(ctx) {
+                                        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : '0.0';
+                                        return ctx.label + ': RM ' + fmtComma(ctx.parsed) + ' (' + percentage + '%)';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ==================== 费用分类弹窗 ====================
+            function openSummaryExpenseModal() {
+                tempSummaryCategories = [...summaryCategories];
+                renderSummaryExpenseModalList();
+                summaryExpenseModalOverlay.classList.add('show');
+                summaryExpenseModalVisible = true;
+            }
+
+            function closeSummaryExpenseModal() {
+                summaryExpenseModalOverlay.classList.remove('show');
+                summaryExpenseModalVisible = false;
+            }
+
+            function renderSummaryExpenseModalList() {
+                let html = '';
+                SUMMARY_CATEGORIES.forEach(cat => {
+                    const isSel = tempSummaryCategories.includes(cat);
+                    html += `
+                <div class="modal-vehicle-item${isSel?' selected':''}" data-value="${cat.replace(/"/g,'&quot;')}">
+                  <div class="check-icon"><i class="fa-solid fa-check"></i></div>
+                  <span class="v-name">${cat}</span>
+                </div>`;
+                });
+                summaryModalExpenseList.innerHTML = html;
+                summaryModalExpenseList.querySelectorAll('.modal-vehicle-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const val = this.dataset.value;
+                        if (tempSummaryCategories.includes(val)) {
+                            tempSummaryCategories = tempSummaryCategories.filter(c => c !== val);
+                        } else {
+                            tempSummaryCategories.push(val);
+                        }
+                        renderSummaryExpenseModalList();
+                    });
+                });
+            }
+
+            function applySummaryExpenseFilter() {
+                summaryCategories = [...tempSummaryCategories];
+                closeSummaryExpenseModal();
+                renderSummary();
+                const name = summaryCategories.length > 0 ? summaryCategories.join(', ') : '全部';
+                showToast(`费用分类筛选: ${name}`);
+            }
+
+            function clearSummaryExpenseFilter() {
+                tempSummaryCategories = [...SUMMARY_CATEGORIES];
+                renderSummaryExpenseModalList();
+            }
+
+            // ==================== Summary 弹窗 ====================
+            function openSummaryVehicleModal() {
+                tempSummaryVehicles = [...summaryVehicles];
+                summaryVehicleSearchTerm = '';
+                summaryModalSearchVehicle.value = '';
+                renderSummaryVehicleModalList();
+                summaryVehicleModalOverlay.classList.add('show');
+                summaryVehicleModalVisible = true;
+                setTimeout(() => summaryModalSearchVehicle.focus(), 150);
+            }
+
+            function closeSummaryVehicleModal() {
+                summaryVehicleModalOverlay.classList.remove('show');
+                summaryVehicleModalVisible = false;
+            }
+
+            function renderSummaryVehicleModalList() {
+                const vehicles = summaryData ? summaryData.vehicles : [];
+                const term = summaryVehicleSearchTerm.toLowerCase().trim();
+                const filtered = term ? vehicles.filter(v => (v.vehicle || '').toLowerCase().includes(term) || (v
+                    .brand || '').toLowerCase().includes(term) || (v.type || '').toLowerCase().includes(term)) : vehicles;
+                if (filtered.length === 0) {
+                    summaryModalVehicleList.innerHTML =
+                        '<div class="rank-empty" style="padding:30px;"><i class="fa-solid fa-search"></i> 无匹配车牌</div>';
+                    return;
+                }
+                let html = '';
+                filtered.forEach(v => {
+                    const vName = v.vehicle || '-';
+                    const isSel = tempSummaryVehicles.includes(vName);
+                    html += `
+                <div class="modal-vehicle-item${isSel?' selected':''}" data-value="${vName.replace(/"/g,'&quot;')}">
+                  <div class="check-icon"><i class="fa-solid fa-check"></i></div>
+                  <span class="v-name">${vName}</span>
+                  <span class="v-detail">${v.brand||''} - ${v.type||''}</span>
+                </div>`;
+                });
+                summaryModalVehicleList.innerHTML = html;
+                summaryModalVehicleList.querySelectorAll('.modal-vehicle-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const val = this.dataset.value;
+                        if (tempSummaryVehicles.includes(val)) {
+                            tempSummaryVehicles = tempSummaryVehicles.filter(v => v !== val);
+                        } else {
+                            tempSummaryVehicles.push(val);
+                        }
+                        renderSummaryVehicleModalList();
+                    });
+                });
+            }
+
+            function applySummaryVehicleFilter() {
+                summaryVehicles = [...tempSummaryVehicles];
+                closeSummaryVehicleModal();
+                renderSummary();
+                const name = summaryVehicles.length > 0 ? summaryVehicles.join(', ') : '全部';
+                showToast(`车牌筛选: ${name}`);
+            }
+
+            function clearSummaryVehicleFilter() {
+                tempSummaryVehicles = [];
+                renderSummaryVehicleModalList();
+            }
+
+            function openSummaryTypeModal() {
+                tempSummaryTypes = [...summaryTypes];
+                summaryTypeSearchTerm = '';
+                summaryModalSearchType.value = '';
+                renderSummaryTypeModalList();
+                summaryTypeModalOverlay.classList.add('show');
+                summaryTypeModalVisible = true;
+                setTimeout(() => summaryModalSearchType.focus(), 150);
+            }
+
+            function closeSummaryTypeModal() {
+                summaryTypeModalOverlay.classList.remove('show');
+                summaryTypeModalVisible = false;
+            }
+
+            function renderSummaryTypeModalList() {
+                const vehicles = summaryData ? summaryData.vehicles : [];
+                const combos = [...new Set(vehicles.map(v => getTypeCombo(v)))].sort();
+                const term = summaryTypeSearchTerm.toLowerCase().trim();
+                const filtered = term ? combos.filter(c => c.toLowerCase().includes(term)) : combos;
+                if (filtered.length === 0) {
+                    summaryModalTypeList.innerHTML =
+                        '<div class="rank-empty" style="padding:30px;"><i class="fa-solid fa-search"></i> 无匹配车型</div>';
+                    return;
+                }
+                let html = '';
+                filtered.forEach(c => {
+                    const isSel = tempSummaryTypes.includes(c);
+                    html += `
+                <div class="modal-vehicle-item${isSel?' selected':''}" data-value="${c.replace(/"/g,'&quot;')}">
+                  <div class="check-icon"><i class="fa-solid fa-check"></i></div>
+                  <span class="v-name">${c}</span>
+                </div>`;
+                });
+                summaryModalTypeList.innerHTML = html;
+                summaryModalTypeList.querySelectorAll('.modal-vehicle-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const val = this.dataset.value;
+                        if (tempSummaryTypes.includes(val)) {
+                            tempSummaryTypes = tempSummaryTypes.filter(v => v !== val);
+                        } else {
+                            tempSummaryTypes.push(val);
+                        }
+                        renderSummaryTypeModalList();
+                    });
+                });
+            }
+
+            function applySummaryTypeFilter() {
+                summaryTypes = [...tempSummaryTypes];
+                closeSummaryTypeModal();
+                renderSummary();
+                const name = summaryTypes.length > 0 ? summaryTypes.join(', ') : '全部';
+                showToast(`车型筛选: ${name}`);
+            }
+
+            function clearSummaryTypeFilter() {
+                tempSummaryTypes = [];
+                renderSummaryTypeModalList();
+            }
+
+            function openSummaryFuelModal() {
+                tempSummaryFuels = [...summaryFuels];
+                summaryFuelSearchTerm = '';
+                summaryModalSearchFuel.value = '';
+                renderSummaryFuelModalList();
+                summaryFuelModalOverlay.classList.add('show');
+                summaryFuelModalVisible = true;
+                setTimeout(() => summaryModalSearchFuel.focus(), 150);
+            }
+
+            function closeSummaryFuelModal() {
+                summaryFuelModalOverlay.classList.remove('show');
+                summaryFuelModalVisible = false;
+            }
+
+            function renderSummaryFuelModalList() {
+                const vehicles = summaryData ? summaryData.vehicles : [];
+                const fuels = getFuelList(vehicles);
+                const term = summaryFuelSearchTerm.toLowerCase().trim();
+                const filtered = term ? fuels.filter(f => f.toLowerCase().includes(term)) : fuels;
+                if (filtered.length === 0) {
+                    summaryModalFuelList.innerHTML =
+                        '<div class="rank-empty" style="padding:30px;"><i class="fa-solid fa-search"></i> 无匹配燃油种类</div>';
+                    return;
+                }
+                let html = '';
+                filtered.forEach(f => {
+                    const isSel = tempSummaryFuels.includes(f);
+                    html += `
+                <div class="modal-vehicle-item${isSel?' selected':''}" data-value="${f.replace(/"/g,'&quot;')}">
+                  <div class="check-icon"><i class="fa-solid fa-check"></i></div>
+                  <span class="v-name">${f}</span>
+                </div>`;
+                });
+                summaryModalFuelList.innerHTML = html;
+                summaryModalFuelList.querySelectorAll('.modal-vehicle-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const val = this.dataset.value;
+                        if (tempSummaryFuels.includes(val)) {
+                            tempSummaryFuels = tempSummaryFuels.filter(v => v !== val);
+                        } else {
+                            tempSummaryFuels.push(val);
+                        }
+                        renderSummaryFuelModalList();
+                    });
+                });
+            }
+
+            function applySummaryFuelFilter() {
+                summaryFuels = [...tempSummaryFuels];
+                closeSummaryFuelModal();
+                renderSummary();
+                const name = summaryFuels.length > 0 ? summaryFuels.join(', ') : '全部';
+                showToast(`燃油种类筛选: ${name}`);
+            }
+
+            function clearSummaryFuelFilter() {
+                tempSummaryFuels = [];
+                renderSummaryFuelModalList();
+            }
+
+            function summaryExportToExcel() {
+                if (!summaryData || !summaryData.vehicles) {
+                    showToast('暂无数据可导出', 'fa-triangle-exclamation');
+                    return;
+                }
+
+                const allMonths = summaryData.months;
+                const regular = allMonths.filter(m => !isExcludedMonth(m));
+                const excluded = allMonths.filter(isExcludedMonth);
+
+                let filtered = regular;
+                if (summaryYear !== '全部') filtered = filtered.filter(m => extractYear(m) === summaryYear);
+                if (summaryMonth !== '全部') filtered = filtered.filter(m => extractMonthAbbr(m) === summaryMonth);
+                const displayMonths = summaryMonth === '全部'
+                    ? [...filtered, ...(summaryYear !== '全部' ? excluded.filter(m => extractYear(m) === summaryYear) : excluded)]
+                    : filtered;
+
+                const filteredVehicles = getSummaryFilteredVehicles(summaryData.vehicles);
+
+                if (!filteredVehicles.length || !displayMonths.length) {
+                    showToast('当前筛选无数据可导出', 'fa-triangle-exclamation');
+                    return;
+                }
+
+                const exportData = [];
+                const exportCats = summaryCategories;
+
+                const headerRow1 = ['车牌', '车型', '燃油'];
+                displayMonths.forEach(m => {
+                    headerRow1.push(m);
+                    for (let i = 1; i < exportCats.length; i++) headerRow1.push('');
+                });
+                exportData.push(headerRow1);
+
+                const headerRow2 = ['', '', ''];
+                displayMonths.forEach(m => {
+                    exportCats.forEach(cat => { headerRow2.push(cat); });
+                });
+                exportData.push(headerRow2);
+
+                filteredVehicles.forEach(v => {
+                    const row = [v.vehicle || '-', getTypeCombo(v), v.fuel || '-'];
+                    displayMonths.forEach(m => {
+                        exportCats.forEach(cat => {
+                            row.push(getSummaryValue(v, m, cat));
+                        });
+                    });
+                    exportData.push(row);
+                });
+
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet(exportData);
+
+                const fixedCols = 3;
+                const colWidths = [{ wch: 18 }, { wch: 20 }, { wch: 14 }];
+                displayMonths.forEach(m => { exportCats.forEach(cat => { colWidths.push({ wch: 12 }); }); });
+                ws['!cols'] = colWidths;
+
+                const merges = [];
+                let colOffset = fixedCols;
+                displayMonths.forEach((m, idx) => {
+                    if (exportCats.length > 1) {
+                        merges.push({ s: { r: 0, c: colOffset }, e: { r: 0, c: colOffset + exportCats.length - 1 } });
+                    }
+                    colOffset += exportCats.length;
+                });
+                ws['!merges'] = merges;
+
+                XLSX.utils.book_append_sheet(wb, ws, '收支总览');
+
+                const now = new Date();
+                const timestamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+                const filename = `Summary_Report_${timestamp}.xlsx`;
+
+                XLSX.writeFile(wb, filename);
+                showToast(`已导出: ${filename}`, 'fa-file-excel');
+            }
+
+            function resetSummaryFilters() {
+                summaryYear = '全部';
+                summaryMonth = '全部';
+                summaryVehicles = [];
+                summaryTypes = [];
+                summaryFuels = [];
+                summaryCategories = [...SUMMARY_CATEGORIES];
+                summaryLineShow = { expense: true, revenue: true, profit: true };
+                summaryRankType = 'expense_high';
+                summaryTableMode = 'summary';
+                summaryYearSelector.value = '全部';
+                updateSummaryLineToggleUI();
+                updateSummaryRankToggleUI();
+                renderSummary();
+                showToast('已复原所有筛选条件', 'fa-undo');
+            }
+
+            function renderSummary() {
+                if (!summaryData || !summaryData.months || !summaryData.vehicles) {
+                    summaryTableBody.innerHTML =
+                        `<tr><td colspan="10" class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i> 数据格式错误</td></tr>`;
+                    return;
+                }
+                const allMonths = summaryData.months;
+                const regular = allMonths.filter(m => !isExcludedMonth(m));
+                const excluded = allMonths.filter(isExcludedMonth);
+                const years = [...new Set(regular.map(extractYear))].sort();
+                const monthAbbrs = [...new Set(regular.map(extractMonthAbbr))].sort((a, b) => monthSortKey(a) - monthSortKey(
+                    b));
+                if (!summaryYearOptionsBuilt) {
+                    summaryYearSelector.innerHTML = '<option value="全部">全部年份</option>';
+                    years.forEach(y => summaryYearSelector.innerHTML += `<option value="${y}">${y}</option>`);
+                    const cy = String(new Date().getFullYear());
+                    summaryYearSelector.value = years.includes(cy) ? cy : (years[0] || '全部');
+                    summaryYear = summaryYearSelector.value;
+                    summaryYearOptionsBuilt = true;
+                }
+                let filtered = regular;
+                if (summaryYear !== '全部') filtered = filtered.filter(m => extractYear(m) === summaryYear);
+                if (summaryMonth !== '全部') filtered = filtered.filter(m => extractMonthAbbr(m) === summaryMonth);
+                const display = summaryMonth === '全部' ? [...filtered, ...(summaryYear !== '全部' ? excluded.filter(m =>
+                    extractYear(m) === summaryYear) : excluded)] : filtered;
+                const allVehicles = summaryData.vehicles;
+                const filteredVehicles = getSummaryFilteredVehicles(allVehicles);
+                const currentVehicleCount = filteredVehicles.length;
+                summaryStatVehicles.textContent = currentVehicleCount;
+                summaryStatVehiclesSub.textContent = summaryVehicles.length > 0 ? `已选: ${summaryVehicles.length}辆` : (
+                    summaryTypes.length > 0 ? `${summaryTypes.length}个车型` : (summaryFuels.length > 0 ?
+                        `${summaryFuels.length}种燃油` : '点击选择车牌'));
+                let totalExpense = 0,
+                    totalRevenue = 0,
+                    totalProfit = 0;
+                filteredVehicles.forEach(v => {
+                    filtered.forEach(m => {
+                        totalExpense += getSummaryExpense(v, m);
+                        totalRevenue += getSummaryRevenue(v, m);
+                        totalProfit += getSummaryProfit(v, m);
+                    });
+                });
+                summaryStatExpense.textContent = fmtComma(totalExpense);
+                const isAllExpenseSelected = EXPENSE_CATEGORIES.every(cat => summaryCategories.includes(cat));
+                summaryStatExpenseSub.textContent = isAllExpenseSelected ? '所有费用' :
+                    `已选 ${summaryCategories.filter(c => EXPENSE_CATEGORIES.includes(c)).length}/${EXPENSE_CATEGORIES.length} 项费用`;
+                summaryStatRevenue.textContent = fmtComma(totalRevenue);
+                summaryStatProfit.textContent = fmtComma(totalProfit);
+                updateSummaryTrendChart(filteredVehicles, regular);
+                updateSummaryRankList(filteredVehicles, regular);
+                updateSummaryRankToggleUI();
+                updateSummaryPieChart(filteredVehicles, regular);
+                updateSummaryLineToggleUI();
+                if (summaryVehicleModalVisible && summaryData) renderSummaryVehicleModalList();
+                if (summaryTypeModalVisible && summaryData) renderSummaryTypeModalList();
+                if (summaryFuelModalVisible && summaryData) renderSummaryFuelModalList();
+                if (summaryExpenseModalVisible) renderSummaryExpenseModalList();
+                const showTableModeToggle = EXPENSE_CATEGORIES.every(cat => summaryCategories.includes(cat));
+                let head =
+                    `<tr class="filter-row"><td class="col-fixed" colspan="2"><span class="filter-label"><i class="fa-solid fa-calendar-alt"></i> 月份筛选</span><select class="month-selector" id="summaryMonthSelector"><option value="全部">全部月份</option>`;
+                monthAbbrs.forEach(m => head += `<option value="${m}">${m}</option>`);
+                head += `</select>`;
+                if (showTableModeToggle) {
+                    head +=
+                        `<span class="table-mode-toggle"><button class="table-mode-btn ${summaryTableMode==='summary'?'active':''}" data-mode="summary">总额</button><button class="table-mode-btn ${summaryTableMode==='detail'?'active':''}" data-mode="detail">明细</button></span>`;
+                }
+                head += `</td>`;
+                head +=
+                    `<td colspan="${display.length+2}" style="background:#f8faff;"><span style="font-size:.75rem;color:#5e7390;"><i class="fa-solid fa-filter"></i> 共 ${filtered.length} 个月份</span></td></tr>`;
+                head += `<tr>`;
+                const fixedCols = ['vehicle', 'brand', 'type', 'fuel'];
+                const fixedLabels = ['车牌', '品牌', '车型', '燃油'];
+                fixedCols.forEach((col, i) => {
+                    const cls = (col === 'vehicle') ? ' col-fixed' : '';
+                    head += `<th class="${cls}">${fixedLabels[i]}</th>`;
+                });
+                display.forEach(m => {
+                    const isSum = isExcludedMonth(m);
+                    head +=
+                        `<th class="col-month"><span style="background:${isSum?'#f0e6d0':'#eef4fd'};padding:2px 10px;border-radius:40px;font-size:.75rem;color:${isSum?'#8a6e3b':'#1f3a5e'};font-weight:${isSum?'700':'500'}">${m}</span></th>`;
+                });
+                head += `</tr>`;
+                summaryTableHead.innerHTML = head;
+                const summaryMonthSelector = document.getElementById('summaryMonthSelector');
+                if (summaryMonthSelector) summaryMonthSelector.value = monthAbbrs.includes(summaryMonth) ? summaryMonth :
+                    '全部';
+                summaryTableHead.querySelectorAll('.table-mode-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        summaryTableMode = this.dataset.mode;
+                        renderSummary();
+                    });
+                });
+                let body = '';
+                if (!filteredVehicles.length || !display.length) {
+                    summaryTableBody.innerHTML =
+                        `<tr><td colspan="${display.length+4}" class="empty-state"><i class="fa-solid fa-box-open"></i> 暂无数据</td></tr>`;
+                    return;
+                }
+                filteredVehicles.forEach(v => {
+                    body += `<tr>`;
+                    body += `<td class="col-fixed"><div class="vehicle-cell">${v.vehicle||'-'}</div></td>`;
+                    body += `<td>${v.brand||'-'}</td>`;
+                    body += `<td>${v.type||'-'}</td>`;
+                    body += `<td>${v.fuel||'-'}</td>`;
+                    display.forEach(m => {
+                        body += `<td class="col-month">`;
+                        let effectiveMode = summaryTableMode;
+                        if (!showTableModeToggle) {
+                            effectiveMode = 'detail';
+                        }
+                        if (effectiveMode === 'summary') {
+                            const expense = getSummaryExpense(v, m);
+                            const revenue = getSummaryRevenue(v, m);
+                            const profit = getSummaryProfit(v, m);
+                            body +=
+                                `<div class="summary-category-item"><span class="summary-cat-name">总费用</span><span class="summary-val expense">${fmtComma(expense)}</span></div>`;
+                            body +=
+                                `<div class="summary-category-item"><span class="summary-cat-name">总收入</span><span class="summary-val revenue">${fmtComma(revenue)}</span></div>`;
+                            body +=
+                                `<div class="summary-category-item"><span class="summary-cat-name">损益</span><span class="summary-val profit">${fmtComma(profit)}</span></div>`;
+                        } else {
+                            EXPENSE_CATEGORIES.forEach(cat => {
+                                if (!summaryCategories.includes(cat)) return;
+                                const val = getSummaryValue(v, m, cat);
+                                body +=
+                                    `<div class="summary-category-item"><span class="summary-cat-name">${cat}</span><span class="summary-val expense">${fmtComma(val)}</span></div>`;
+                            });
+                            if (summaryCategories.includes('Revenue')) {
+                                const revenue = getSummaryRevenue(v, m);
+                                body +=
+                                    `<div class="summary-category-item"><span class="summary-cat-name">总收入</span><span class="summary-val revenue">${fmtComma(revenue)}</span></div>`;
+                            }
+                            if (summaryCategories.includes('Profit')) {
+                                const profit = getSummaryProfit(v, m);
+                                body +=
+                                    `<div class="summary-category-item"><span class="summary-cat-name">损益</span><span class="summary-val profit">${fmtComma(profit)}</span></div>`;
+                            }
+                        }
+                        body += `</td>`;
+                    });
+                    body += `</tr>`;
+                });
+                summaryTableBody.innerHTML = body;
+            }
+
+            function switchPage(page) {
+                currentPage = page;
+                if (page === 'fuel') {
+                    fuelPage.style.display = '';
+                    summaryPage.style.display = 'none';
+                    fuelHeaderRight.style.display = '';
+                    summaryHeaderRight.style.display = 'none';
+                    navMenuLabel.textContent = 'Fuel Dashboard';
+                    pageTitle.textContent = 'Fuel Dashboard';
+                    navDropdown.querySelectorAll('.nav-dropdown-item').forEach(item => {
+                        item.classList.toggle('active', item.dataset.page === 'fuel');
+                    });
+                } else {
+                    fuelPage.style.display = 'none';
+                    summaryPage.style.display = '';
+                    fuelHeaderRight.style.display = 'none';
+                    summaryHeaderRight.style.display = '';
+                    navMenuLabel.textContent = 'Summary Report';
+                    pageTitle.textContent = 'Summary Report';
+                    navDropdown.querySelectorAll('.nav-dropdown-item').forEach(item => {
+                        item.classList.toggle('active', item.dataset.page === 'summary');
+                    });
+                    renderSummary();
+                }
+                navDropdown.classList.remove('show');
+                navMenuBtn.classList.remove('open');
+            }
+
+            function init() {
+                const cache = getCache();
+                updateCacheBadge(cache ? '缓存' : '无缓存', cache?.timestamp);
+                loadData();
+                refreshBtn.addEventListener('click', () => !isRefreshing && loadData(true));
+                exportBtn.addEventListener('click', exportToExcel);
+                resetBtn.addEventListener('click', resetAllFilters);
+                toggleGroup.addEventListener('click', e => {
+                    const btn = e.target.closest('.toggle-btn');
+                    if (!btn) return;
+                    if (btn.dataset.type === 'rm') showRM = showRM ? (showLiter ? false : true) : true;
+                    else showLiter = showLiter ? (showRM ? false : true) : true;
+                    updateToggle();
+                    cachedData && render(cachedData);
+                });
+                yearSelector.addEventListener('change', e => { selectedYear = e.target.value;
+                    cachedData && render(cachedData); });
+                tableHead.addEventListener('change', e => { if (e.target.id === 'monthSelector') { selectedMonth = e
+                        .target.value;
+                        cachedData && render(cachedData); } });
+                rankToggleGroup.addEventListener('click', e => {
+                    const btn = e.target.closest('.rank-toggle-btn');
+                    if (!btn) return;
+                    if (btn.dataset.rtype === 'rm') rankType = 'rm';
+                    else rankType = 'liter';
+                    cachedData && render(cachedData);
+                });
+                pieToggleGroup.addEventListener('click', e => {
+                    const btn = e.target.closest('.pie-toggle-btn');
+                    if (!btn) return;
+                    if (btn.dataset.ptype === 'rm') pieType = 'rm';
+                    else pieType = 'liter';
+                    cachedData && render(cachedData);
+                });
+                statCardVehicles.addEventListener('click', () => { if (!cachedData) return;
+                    openVehicleModal(); });
+                statCardTypes.addEventListener('click', () => { if (!cachedData) return;
+                    openTypeModal(); });
+                statCardFuels.addEventListener('click', () => { if (!cachedData) return;
+                    openFuelModal(); });
+                modalCloseVehicle.addEventListener('click', closeVehicleModal);
+                vehicleModalOverlay.addEventListener('click', function(e) { if (e.target === vehicleModalOverlay)
+                        closeVehicleModal(); });
+                modalSearchVehicle.addEventListener('input', function() { vehicleSearchTerm = this.value;
+                    renderVehicleModalList(); });
+                modalClearVehicle.addEventListener('click', clearVehicleFilter);
+                modalConfirmVehicle.addEventListener('click', applyVehicleFilter);
+                modalCloseType.addEventListener('click', closeTypeModal);
+                typeModalOverlay.addEventListener('click', function(e) { if (e.target === typeModalOverlay)
+                        closeTypeModal(); });
+                modalSearchType.addEventListener('input', function() { typeSearchTerm = this.value;
+                    renderTypeModalList(); });
+                modalClearType.addEventListener('click', clearTypeFilter);
+                modalConfirmType.addEventListener('click', applyTypeFilter);
+                modalCloseFuel.addEventListener('click', closeFuelModal);
+                fuelModalOverlay.addEventListener('click', function(e) { if (e.target === fuelModalOverlay)
+                        closeFuelModal(); });
+                modalSearchFuel.addEventListener('input', function() { fuelSearchTerm = this.value;
+                    renderFuelModalList(); });
+                modalClearFuel.addEventListener('click', clearFuelFilter);
+                modalConfirmFuel.addEventListener('click', applyFuelFilter);
+                // Summary 事件
+                summaryYearSelector.addEventListener('change', e => { summaryYear = e.target.value;
+                    renderSummary(); });
+                summaryTableHead.addEventListener('change', e => {
+                    if (e.target.id === 'summaryMonthSelector') { summaryMonth = e.target.value;
+                        renderSummary(); }
+                });
+                summaryResetBtn.addEventListener('click', resetSummaryFilters);
+                summaryExportBtn.addEventListener('click', summaryExportToExcel);
+                summaryLineToggle.addEventListener('click', e => {
+                    const btn = e.target.closest('.summary-line-btn');
+                    if (!btn) return;
+                    const line = btn.dataset.line;
+                    summaryLineShow[line] = !summaryLineShow[line];
+                    if (!summaryLineShow.expense && !summaryLineShow.revenue && !summaryLineShow.profit) {
+                        summaryLineShow[line] = true;
+                    }
+                    renderSummary();
+                });
+                summaryRankToggleGroup.addEventListener('click', e => {
+                    const btn = e.target.closest('.rank-toggle-btn');
+                    if (!btn) return;
+                    summaryRankType = btn.dataset.srtype;
+                    renderSummary();
+                });
+                summaryStatCardVehicles.addEventListener('click', () => { if (summaryData)
+                        openSummaryVehicleModal(); });
+                summaryStatCardExpense.addEventListener('click', () => { if (summaryData)
+                        openSummaryExpenseModal(); });
+                summaryModalCloseVehicle.addEventListener('click', closeSummaryVehicleModal);
+                summaryVehicleModalOverlay.addEventListener('click', function(e) { if (e.target ===
+                        summaryVehicleModalOverlay) closeSummaryVehicleModal(); });
+                summaryModalSearchVehicle.addEventListener('input', function() { summaryVehicleSearchTerm = this.value;
+                    renderSummaryVehicleModalList(); });
+                summaryModalClearVehicle.addEventListener('click', clearSummaryVehicleFilter);
+                summaryModalConfirmVehicle.addEventListener('click', applySummaryVehicleFilter);
+                summaryModalCloseType.addEventListener('click', closeSummaryTypeModal);
+                summaryTypeModalOverlay.addEventListener('click', function(e) { if (e.target === summaryTypeModalOverlay)
+                        closeSummaryTypeModal(); });
+                summaryModalSearchType.addEventListener('input', function() { summaryTypeSearchTerm = this.value;
+                    renderSummaryTypeModalList(); });
+                summaryModalClearType.addEventListener('click', clearSummaryTypeFilter);
+                summaryModalConfirmType.addEventListener('click', applySummaryTypeFilter);
+                summaryModalCloseFuel.addEventListener('click', closeSummaryFuelModal);
+                summaryFuelModalOverlay.addEventListener('click', function(e) { if (e.target === summaryFuelModalOverlay)
+                        closeSummaryFuelModal(); });
+                summaryModalSearchFuel.addEventListener('input', function() { summaryFuelSearchTerm = this.value;
+                    renderSummaryFuelModalList(); });
+                summaryModalClearFuel.addEventListener('click', clearSummaryFuelFilter);
+                summaryModalConfirmFuel.addEventListener('click', applySummaryFuelFilter);
+                summaryModalCloseExpense.addEventListener('click', closeSummaryExpenseModal);
+                summaryExpenseModalOverlay.addEventListener('click', function(e) { if (e.target ===
+                        summaryExpenseModalOverlay) closeSummaryExpenseModal(); });
+                summaryModalClearExpense.addEventListener('click', clearSummaryExpenseFilter);
+                summaryModalConfirmExpense.addEventListener('click', applySummaryExpenseFilter);
+                navMenuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    navDropdown.classList.toggle('show');
+                    navMenuBtn.classList.toggle('open');
+                });
+                navDropdown.querySelectorAll('.nav-dropdown-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        switchPage(this.dataset.page);
+                    });
+                });
+                document.addEventListener('click', function(e) {
+                    if (!navMenuBtn.contains(e.target) && !navDropdown.contains(e.target)) {
+                        navDropdown.classList.remove('show');
+                        navMenuBtn.classList.remove('open');
+                    }
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        navDropdown.classList.remove('show');
+                        navMenuBtn.classList.remove('open');
+                        if (vehicleModalVisible) closeVehicleModal();
+                        if (typeModalVisible) closeTypeModal();
+                        if (fuelModalVisible) closeFuelModal();
+                        if (summaryVehicleModalVisible) closeSummaryVehicleModal();
+                        if (summaryTypeModalVisible) closeSummaryTypeModal();
+                        if (summaryFuelModalVisible) closeSummaryFuelModal();
+                        if (summaryExpenseModalVisible) closeSummaryExpenseModal();
+                    }
+                });
+            }
+            init();
+        })();
+    </script>
+</body>
+</html>
